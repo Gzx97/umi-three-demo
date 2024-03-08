@@ -21,7 +21,7 @@ export default function Layout() {
       <ProLayout
         route={clientRoutes[0]}
         location={location}
-        title="Umi x Ant Design"
+        title="Umi4 + Antd + Three"
         menuItemRender={(menuItemProps, defaultDom) => {
           if (menuItemProps.isUrl || menuItemProps.children) {
             return defaultDom;

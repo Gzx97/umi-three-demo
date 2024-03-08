@@ -15,6 +15,7 @@ import Events from "./Events";
 import { throttle } from "lodash";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import Stats from "three/examples/jsm/libs/stats.module.js";
+import SkyBoxs from "../SkyBoxs";
 // import SkyBoxs from '../SkyBoxs'
 
 export type Animate = {
@@ -29,7 +30,7 @@ export default class Viewer {
   public camera!: PerspectiveCamera;
   public renderer!: WebGLRenderer;
   public controls!: OrbitControls;
-  // public skyboxs!: SkyBoxs
+  public skyboxs!: SkyBoxs;
   public animateEventList: any[] = [];
   public statsControls!: Stats;
   public raycaster!: Raycaster;
@@ -122,7 +123,8 @@ export default class Viewer {
     this.initLight();
     this.initCamera();
     this.initControl();
-    // this.initSkybox()
+    // this.initSkybox();
+    // this.addAxis();
 
     this.raycaster = new Raycaster();
     this.mouse = new Vector2();
@@ -154,7 +156,8 @@ export default class Viewer {
     // 渲染相机
     this.camera = new PerspectiveCamera(
       25,
-      window.innerWidth / window.innerHeight,
+      // window.innerWidth / window.innerHeight,
+      1,
       1,
       2000
     );
@@ -177,7 +180,7 @@ export default class Viewer {
       // preserveDrawingBuffer: false, // true/false 表示是否保存绘图缓冲
       // physicallyCorrectLights: true, // true/false 表示是否开启物理光照
     });
-    this.renderer.clearDepth();
+    this.renderer.clearDepth(); //清除深度缓冲区。在渲染之前，这通常用于重置深度缓冲区，以确保正确的深度测试
 
     this.renderer.shadowMap.enabled = true;
     this.renderer.outputColorSpace = SRGBColorSpace; // 可以看到更亮的材质，同时这也影响到环境贴图。
@@ -198,11 +201,11 @@ export default class Viewer {
     });
   }
 
-  // private initSkybox() {
-  //   if (!this.skyboxs) this.skyboxs = new SkyBoxs(this)
-  //   this.skyboxs.addSkybox('night')
-  //   this.skyboxs.addFog()
-  // }
+  private initSkybox() {
+    if (!this.skyboxs) this.skyboxs = new SkyBoxs(this);
+    this.skyboxs.addSkybox("night");
+    this.skyboxs.addFog();
+  }
 
   private initLight() {
     const ambient = new AmbientLight(0xffffff, 0.6);

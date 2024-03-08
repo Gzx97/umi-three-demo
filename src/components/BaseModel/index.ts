@@ -49,6 +49,7 @@ export default class BaseModel {
   public startAnima(i = 0) {
     this.animaIndex = i;
     if (!this.mixer) this.mixer = new THREE.AnimationMixer(this.object);
+    console.log(this.gltf.animations);
     if (this.gltf.animations.length < 1) return;
     this.mixer.clipAction(this.gltf.animations[i]).play();
     // 传入参数需要将函数与函数参数分开，在运行时填入
