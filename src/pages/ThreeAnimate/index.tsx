@@ -19,7 +19,7 @@ const ThreeAnimate: React.FC = () => {
   const init = () => {
     viewer = new Viewer(PAGE_ID);
     // viewer.addAxis();
-    // viewer.addStats();
+    viewer.addStats();
     viewer.initRaycaster();
 
     modelLoader = new ModelLoader(viewer);

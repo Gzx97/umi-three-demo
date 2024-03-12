@@ -49,7 +49,6 @@ export default class BaseModel {
   public startAnima(i = 0) {
     this.animaIndex = i;
     if (!this.mixer) this.mixer = new THREE.AnimationMixer(this.object);
-    console.log(this.gltf.animations);
     if (this.gltf.animations.length < 1) return;
     this.mixer.clipAction(this.gltf.animations[i]).play();
     // 传入参数需要将函数与函数参数分开，在运行时填入
@@ -86,8 +85,9 @@ export default class BaseModel {
   public openCastShadow(names = []) {
     this.gltf.scene.traverse((model: Object3DExtends) => {
       if (model.isMesh && !names.includes(model.name as never)) {
+        //它会在渲染对象之前检查每一帧对象是否位于相机的视锥体中。 如果设置为 false，则即使对象不在相机的视锥体中，也会在每一帧进行渲染。
         model.frustumCulled = false;
-        model.castShadow = true;
+        model.castShadow = true; //对象是否渲染成阴影贴图。
       }
     });
   }

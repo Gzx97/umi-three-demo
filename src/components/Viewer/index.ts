@@ -76,10 +76,18 @@ export default class Viewer {
     const initRaycasterEvent: Function = (
       eventName: keyof HTMLElementEventMap
     ): void => {
+      //这里的container就是画布所在的div，也就是说，这个是要拿整个scene所在的容器来界定的
+      let getBoundingClientRect = this.viewerDom.getBoundingClientRect();
+      let offsetWidth = this.viewerDom.offsetWidth;
+      let offsetHeight = this.viewerDom.offsetHeight;
       const funWrap = throttle((event: any) => {
         this.mouseEvent = event;
-        this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-        this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        // this.mouse.x = (event.clientX  / window.innerWidth) * 2 - 1;
+        // this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        this.mouse.x =
+          ((event.clientX - getBoundingClientRect.left) / offsetWidth) * 2 - 1;
+        this.mouse.y =
+          -((event.clientY - getBoundingClientRect.top) / offsetHeight) * 2 + 1;
         this.emitter.emit(
           (Events as any)[eventName].raycaster,
           this.getRaycasterIntersectObjects()
@@ -144,7 +152,6 @@ export default class Viewer {
         }
       });
     };
-
     animate();
   }
 
@@ -156,8 +163,8 @@ export default class Viewer {
     // 渲染相机
     this.camera = new PerspectiveCamera(
       25,
-      // window.innerWidth / window.innerHeight,
-      1,
+      window.innerWidth / window.innerHeight,
+      // 1,
       1,
       2000
     );
@@ -253,6 +260,7 @@ export default class Viewer {
   private getRaycasterIntersectObjects(): THREE.Intersection[] {
     if (!this.raycasterObjects.length) return [];
     this.raycaster.setFromCamera(this.mouse, this.camera);
+    // console.log(this.raycaster.intersectObjects(this.raycasterObjects, true));
     return this.raycaster.intersectObjects(this.raycasterObjects, true);
   }
 }
