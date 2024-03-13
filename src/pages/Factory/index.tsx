@@ -7,7 +7,9 @@ import styles from "./index.less";
 import Floors from "@/components/Floors";
 import { checkNameIncludes, findParent } from "@/utils";
 import Event from "@/components/Viewer/Events";
-
+interface Object3DWithOldMaterial extends THREE.Object3D {
+  oldMaterial?: THREE.Material;
+}
 const PAGE_ID = "FACTORY_CONTAINER";
 
 const ThreeDemo: React.FC = () => {
@@ -24,17 +26,28 @@ const ThreeDemo: React.FC = () => {
     viewer.initRaycaster();
 
     modelLoader = new ModelLoader(viewer);
-    // const floors = new Floors(viewer);
-    // floors.addGird(8, 25, 0x004444, 0x004444);
+    const floors = new Floors(viewer);
+    floors.addGird(8, 25, 0x004444, 0x004444);
     boxHelperWrap = new BoxHelperWrap(viewer);
 
+    viewer.emitter.on(
+      Event.mousemove.raycaster,
+      (list: THREE.Intersection[]) => {
+        onMouseMove(list);
+        console.log(list);
+      }
+    );
     viewer.emitter.on(Event.click.raycaster, (list: THREE.Intersection[]) => {
-      onMouseMove(list);
+      onMouseClick(list);
       console.log(list);
     });
   };
   const checkIsRack = (obj: any): boolean => {
     return checkNameIncludes(obj, "rack");
+  };
+  const onMouseClick = (intersects: THREE.Intersection[]) => {
+    const selectedObject = intersects[0].object || {};
+    selectedObject.visible = false;
   };
   const onMouseMove = (intersects: THREE.Intersection[]) => {
     if (!intersects.length) {
@@ -43,10 +56,29 @@ const ThreeDemo: React.FC = () => {
       return;
     }
     const selectedObject = intersects[0].object || {};
-    selectedObject.visible = false;
+    // selectedObject.visible = false;
     console.log(selectedObject);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    let selectedObjectName = "";
+    const findClickModel = (object: any) => {
+      if (object.type === "Group") {
+        console.log("object.type === 'Group'", object);
+        selectedObjectName = object.name;
+        return;
+      }
+      if (object.parent && object.type !== "Scene") {
+        findClickModel(object.parent);
+      }
+    };
+    findClickModel(selectedObject);
+    console.log(selectedObjectName);
+    const rack = findParent(selectedObject, checkIsRack);
+    if (rack) {
+      boxHelperWrap.attach(rack);
+      updateRackInfo(rack.name);
+    }
   };
-
+  const updateRackInfo = (name: string) => {};
   // 加载模型
   const initModel = () => {
     // 工厂 garage_factory
@@ -69,21 +101,23 @@ const ThreeDemo: React.FC = () => {
       // 启用基础模型的投射阴影功能
       baseModel.openCastShadow();
       let rackList: THREE.Object3D[] = [];
-      model.traverse((item: any) => {
+      model.traverse((item) => {
         // console.log(item);
         if (checkIsRack(item)) {
           rackList.push(item);
         }
-        // 保存原始颜色数据，以及警告颜色
-        if (item.isMesh) {
-          item.material.warningColor = {
-            r: 1,
-            g: 0,
-            b: 0,
-            isColor: true,
-          };
-          // 保存旧的材质
-          item.oldMaterial = item.material;
+        if (item instanceof THREE.Mesh) {
+          // 保存原始颜色数据，以及警告颜色
+          if (item.isMesh) {
+            item.material.warningColor = {
+              r: 1,
+              g: 0,
+              b: 0,
+              isColor: true,
+            };
+            // 保存旧的材质
+            (item as Object3DWithOldMaterial).oldMaterial = item.material;
+          }
         }
       });
       rackListRef.current = rackList;
