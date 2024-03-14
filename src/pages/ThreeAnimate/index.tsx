@@ -5,9 +5,9 @@ import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 //引入lil-gui
 import { GUI } from "three/examples/jsm/libs/lil-gui.module.min.js";
-import Viewer, { Animate } from "@/components/Viewer";
-import ModelLoader from "@/components/ModelLoder";
-import BoxHelperWrap from "@/components/BoxHelperWrap";
+import Viewer, { Animate } from "@/modules/Viewer";
+import ModelLoader from "@/modules/ModelLoder";
+import BoxHelperWrap from "@/modules/BoxHelperWrap";
 import styles from "./index.less";
 const PAGE_ID = "BELT_CONTAINER";
 const ThreeAnimate: React.FC = () => {

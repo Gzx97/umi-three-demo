@@ -2,7 +2,7 @@ import React from "react";
 import axios from "axios";
 import { useMutation, useQuery, useQueryClient } from "umi";
 
-import styles from "./products.less";
+import styles from "./index.less";
 import ProductList from "@/components/ProductList";
 
 export default function Page() {
