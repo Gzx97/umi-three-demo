@@ -7,13 +7,16 @@ import styles from "./index.less";
 import Floors from "@/modules/Floors";
 import { checkNameIncludes, findParent } from "@/utils";
 import Event from "@/modules/Viewer/Events";
-interface Object3DWithOldMaterial extends THREE.Object3D {
-  oldMaterial?: THREE.Material;
-}
+import { Object3DExtends } from "@/types";
+import Popover from "./components/Popover";
+
 const PAGE_ID = "FACTORY_CONTAINER";
 
 const ThreeDemo: React.FC = () => {
-  const rackListRef = useRef([] as THREE.Object3D[]);
+  const [rackList, setRackList] = useState<THREE.Object3D[]>([]);
+  const [showPopover, setShowPopover] = useState<boolean>(false);
+  const [popoverPosition, setPopoverPosition] = useState({ top: 0, left: 0 });
+  const [popoverData, setPopoverData] = useState({});
   let viewer: Viewer;
   let modelLoader: ModelLoader;
   let boxHelperWrap: BoxHelperWrap;
@@ -29,20 +32,17 @@ const ThreeDemo: React.FC = () => {
     const floors = new Floors(viewer);
     floors.addGird(8, 25, 0x004444, 0x004444);
     boxHelperWrap = new BoxHelperWrap(viewer);
-
     viewer.emitter.on(
       Event.mousemove.raycaster,
       (list: THREE.Intersection[]) => {
         onMouseMove(list);
-        console.log(list);
       }
     );
     viewer.emitter.on(Event.click.raycaster, (list: THREE.Intersection[]) => {
       onMouseClick(list);
-      console.log(list);
     });
   };
-  const checkIsRack = (obj: any): boolean => {
+  const checkIsRack = (obj: THREE.Object3D): boolean => {
     return checkNameIncludes(obj, "rack");
   };
   const onMouseClick = (intersects: THREE.Intersection[]) => {
@@ -52,18 +52,14 @@ const ThreeDemo: React.FC = () => {
   };
   const onMouseMove = (intersects: THREE.Intersection[]) => {
     if (!intersects.length) {
-      // popoverRef.value.setShow(false)
       boxHelperWrap.setVisible(false);
+      setShowPopover(false);
       return;
     }
     const selectedObject = intersects[0].object || {};
-    // selectedObject.visible = false;
-    console.log(selectedObject);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     let selectedObjectName = "";
-    const findClickModel = (object: any) => {
+    const findClickModel = (object: THREE.Object3D) => {
       if (object.type === "Group") {
-        console.log("object.type === 'Group'", object);
         selectedObjectName = object.name;
         return;
       }
@@ -72,28 +68,60 @@ const ThreeDemo: React.FC = () => {
       }
     };
     findClickModel(selectedObject);
-    console.log(selectedObjectName);
     const rack = findParent(selectedObject, checkIsRack);
     if (rack) {
+      // console.log(rack);
       boxHelperWrap.attach(rack);
       updateRackInfo(rack.name);
     }
   };
-  const updateRackInfo = (name: string) => {};
+  const updateRackInfo = (name: string) => {
+    if (!name) {
+      setShowPopover(false);
+      return;
+    }
+    const event = viewer.mouseEvent as MouseEvent;
+    setPopoverPosition({
+      top: event.y + 10,
+      left: event.x + 10,
+    });
+    setPopoverData({ title: name });
+    setShowPopover(true);
+  };
+
+  // 修改颜色
+  const changeWarningColor = (model: THREE.Object3D) => {
+    model.traverseVisible((item: Object3DExtends) => {
+      if (item.isMesh) {
+        item.material = new THREE.MeshStandardMaterial({
+          metalness: 1.0,
+          roughness: 0.5,
+        });
+        item.material.color = item?.oldMaterial?.warningColor;
+      }
+    });
+  };
+  // 通过name修改成警告颜色
+  const changeWarningColorByName = (name: string) => {
+    console.log(rackList);
+    const model = rackList.find((item) => item.name === name);
+    if (model) {
+      changeWarningColor(model);
+    }
+  };
   // 加载模型
   const initModel = () => {
-    // 工厂 garage_factory
     modelLoader.loadModelToScene("/models/datacenter.glb", (baseModel) => {
       // /models/datacenter.glb
       // /models/GuiGu-factory.glb
       console.log(baseModel);
       // 设置基础模型的缩放比例
-      baseModel.setScalc(0.1);
+      baseModel.setScalc(0.15);
       // 暂时注释掉旋转代码
       // baseModel.object.rotation.y = Math.PI / 2;
       // 获取实际的模型对象
       const model = baseModel.gltf.scene;
-      model.position.set(0, 0, 0);
+      model.position.set(0, 0, 0.3);
       // 为模型设置名称
       model.name = "机房1";
       model.uuid = "机房1";
@@ -101,9 +129,8 @@ const ThreeDemo: React.FC = () => {
 
       // 启用基础模型的投射阴影功能
       baseModel.openCastShadow();
-      let rackList: THREE.Object3D[] = [];
+      let rackList: Object3DExtends[] = [];
       model.traverse((item) => {
-        // console.log(item);
         if (checkIsRack(item)) {
           rackList.push(item);
         }
@@ -117,12 +144,12 @@ const ThreeDemo: React.FC = () => {
               isColor: true,
             };
             // 保存旧的材质
-            (item as Object3DWithOldMaterial).oldMaterial = item.material;
+            (item as Object3DExtends).oldMaterial = item.material;
           }
         }
       });
-      rackListRef.current = rackList;
-      console.log("rackList------", rackList);
+      setRackList(rackList);
+      // console.log("rackList------", rackList);
       // 将 rackList 中的机架设置为 viewer 的射线检测对象
       viewer.setRaycasterObjects(rackList);
     });
@@ -130,13 +157,23 @@ const ThreeDemo: React.FC = () => {
   useEffect(() => {
     init();
     initModel();
+    return () => {
+      viewer.destroy();
+    };
   }, []);
+  // 模拟报警测试
+  useEffect(() => {
+    setTimeout(() => {
+      changeWarningColorByName("rackA_1");
+    }, 2000);
+  }, [rackList]);
   return (
     <div className={styles.wrapper}>
       <div
         id={PAGE_ID}
         style={{ width: 1000, height: 1000, border: "1px solid red" }}
       ></div>
+      <Popover show={showPopover} {...popoverPosition} data={popoverData} />
     </div>
   );
 };

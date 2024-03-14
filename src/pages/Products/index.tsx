@@ -3,7 +3,7 @@ import axios from "axios";
 import { useMutation, useQuery, useQueryClient } from "umi";
 
 import styles from "./index.less";
-import ProductList from "@/components/ProductList";
+import ProductList from "@/pages/Products/components/ProductList";
 
 export default function Page() {
   const queryClient = useQueryClient();
