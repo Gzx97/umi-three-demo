@@ -1,12 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import Viewer, { Animate } from "@/components/Viewer";
-import ModelLoader from "@/components/ModelLoder";
-import BoxHelperWrap from "@/components/BoxHelperWrap";
+import Viewer, { Animate } from "@/modules/Viewer";
+import ModelLoader from "@/modules/ModelLoder";
+import BoxHelperWrap from "@/modules/BoxHelperWrap";
 import styles from "./index.less";
-import Floors from "@/components/Floors";
+import Floors from "@/modules/Floors";
 import { checkNameIncludes, findParent } from "@/utils";
-import Event from "@/components/Viewer/Events";
+import Event from "@/modules/Viewer/Events";
 interface Object3DWithOldMaterial extends THREE.Object3D {
   oldMaterial?: THREE.Material;
 }
@@ -46,8 +46,9 @@ const ThreeDemo: React.FC = () => {
     return checkNameIncludes(obj, "rack");
   };
   const onMouseClick = (intersects: THREE.Intersection[]) => {
-    const selectedObject = intersects[0].object || {};
-    selectedObject.visible = false;
+    if (!intersects.length) return;
+    const selectedObject = intersects?.[0].object || {};
+    selectedObject.visible = !selectedObject.visible;
   };
   const onMouseMove = (intersects: THREE.Intersection[]) => {
     if (!intersects.length) {
