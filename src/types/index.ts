@@ -1,8 +1,13 @@
-import type { Object3D, Material } from "three";
+import type { Object3D, Material, Color } from "three";
+export interface MaterialExtends extends Material {
+  color?: Color;
+  warningColor?: Color;
+}
 
 export interface Object3DExtends extends Object3D {
   isGroup?: boolean;
   isMesh?: boolean;
-  material?: Material;
+  material?: MaterialExtends;
+  oldMaterial?: MaterialExtends;
   name: string;
 }

@@ -81,7 +81,11 @@ export default class Viewer {
       let offsetWidth = this.viewerDom.offsetWidth;
       let offsetHeight = this.viewerDom.offsetHeight;
       const funWrap = throttle((event: any) => {
-        this.mouseEvent = event;
+        this.mouseEvent = {
+          ...event,
+          x: event.clientX - getBoundingClientRect.left,
+          y: event.clientY - getBoundingClientRect.top,
+        };
         // this.mouse.x = (event.clientX  / window.innerWidth) * 2 - 1;
         // this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
         this.mouse.x =
