@@ -14,6 +14,7 @@ import mitt, { type Emitter } from "mitt";
 import Events from "./Events";
 import { throttle } from "lodash";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { Tween } from "three/examples/jsm/libs/tween.module.js";
 import Stats from "three/examples/jsm/libs/stats.module.js";
 import SkyBoxs from "../SkyBoxs";
 // import SkyBoxs from '../SkyBoxs'
@@ -39,6 +40,7 @@ export default class Viewer {
   public mouseEvent: MouseEvent | undefined;
   public raycasterObjects: THREE.Object3D[] = [];
   public isDestroy = false;
+  public tween!: Tween<THREE.Vector3>;
 
   constructor(id: string) {
     this.id = id;
@@ -68,6 +70,27 @@ export default class Viewer {
     });
   }
 
+  /**
+   * 初始化补间动画库tween
+   */
+  public initTween() {
+    if (!this.camera) return;
+    this.tween = new Tween(this.camera.position);
+  }
+
+  /**
+   * 添加补间动画
+   * @param targetPosition
+   * @param duration
+   */
+  public addTween(
+    targetPosition = new THREE.Vector3(1, 1, 1),
+    duration = 1000
+  ) {
+    this.tween.to(targetPosition, duration);
+    this.tween.start();
+  }
+
   /**注册鼠标事件监听 */
   public initRaycaster() {
     this.raycaster = new Raycaster();
@@ -83,6 +106,7 @@ export default class Viewer {
       const funWrap = throttle((event: any) => {
         this.mouseEvent = {
           ...event,
+          //真正的鼠标相对于画布的位置
           x: event.clientX - getBoundingClientRect.left,
           y: event.clientY - getBoundingClientRect.top,
         };
@@ -135,6 +159,7 @@ export default class Viewer {
     this.initLight();
     this.initCamera();
     this.initControl();
+    this.initTween();
     // this.initSkybox();
     // this.addAxis();
 
@@ -144,9 +169,11 @@ export default class Viewer {
     const animate = () => {
       if (this.isDestroy) return;
       requestAnimationFrame(animate);
-
+      if (this.tween) {
+        this.tween.update();
+      }
       this.updateDom();
-      this.readerDom();
+      this.renderDom();
 
       // 全局的公共动画函数，添加函数可同步执行
       this.animateEventList.forEach((event) => {
@@ -173,6 +200,7 @@ export default class Viewer {
       2000
     );
     //设置相机位置
+    // this.camera.position.set(5, 1, -5);
     this.camera.position.set(4, 2, -3);
     //设置相机方向
     this.camera.lookAt(0, 0, 0);
@@ -208,6 +236,7 @@ export default class Viewer {
     this.controls.minDistance = 2;
     this.controls.maxDistance = 1000;
     this.controls.addEventListener("change", () => {
+      // console.log(this.camera);
       this.renderer.render(this.scene, this.camera);
     });
   }
@@ -239,7 +268,7 @@ export default class Viewer {
   }
 
   // 渲染dom
-  private readerDom() {
+  private renderDom() {
     this.renderer?.render(this.scene as Scene, this.camera as Camera);
   }
 

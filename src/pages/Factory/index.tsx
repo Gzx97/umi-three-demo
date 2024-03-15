@@ -27,6 +27,7 @@ const ThreeDemo: React.FC = () => {
     viewer.addAxis();
     viewer.addStats();
     viewer.initRaycaster();
+    viewer.initTween();
 
     modelLoader = new ModelLoader(viewer);
     const floors = new Floors(viewer);
@@ -164,9 +165,15 @@ const ThreeDemo: React.FC = () => {
   // 模拟报警测试
   useEffect(() => {
     setTimeout(() => {
-      changeWarningColorByName("rackA_1");
-    }, 2000);
+      changeWarningColorByName("rackA_3");
+      console.log(viewer);
+    }, 5000);
   }, [rackList]);
+  useEffect(() => {
+    setTimeout(() => {
+      viewer?.addTween(new THREE.Vector3(10, 10, 10));
+    }, 5000);
+  }, []);
   return (
     <div className={styles.wrapper}>
       <div
