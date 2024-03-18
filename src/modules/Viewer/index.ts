@@ -87,6 +87,7 @@ export default class Viewer {
     targetPosition = new THREE.Vector3(1, 1, 1),
     duration = 1000
   ) {
+    this.tween.yoyo(true);
     this.tween.to(targetPosition, duration);
     this.tween.start();
   }
@@ -159,7 +160,7 @@ export default class Viewer {
     this.initLight();
     this.initCamera();
     this.initControl();
-    this.initTween();
+    // this.initTween();
     // this.initSkybox();
     // this.addAxis();
 
@@ -236,7 +237,7 @@ export default class Viewer {
     this.controls.minDistance = 2;
     this.controls.maxDistance = 1000;
     this.controls.addEventListener("change", () => {
-      // console.log(this.camera);
+      console.log(this.camera);
       this.renderer.render(this.scene, this.camera);
     });
   }
