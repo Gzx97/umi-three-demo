@@ -13,7 +13,9 @@ import Popover from "./components/Popover";
 const PAGE_ID = "FACTORY_CONTAINER";
 
 const ThreeDemo: React.FC = () => {
-  const [rackList, setRackList] = useState<THREE.Object3D[]>([]);
+  const [rackList, setRackList] = useState<THREE.Object3D[]>([]); //架子
+  // const [chairList, setChairList] = useState<THREE.Object3D[]>([]); //椅子
+  let chairList = [] as THREE.Object3D[];
   const [showPopover, setShowPopover] = useState<boolean>(false);
   const [popoverPosition, setPopoverPosition] = useState({ top: 0, left: 0 });
   const [popoverData, setPopoverData] = useState({});
@@ -27,7 +29,6 @@ const ThreeDemo: React.FC = () => {
     viewer.addAxis();
     viewer.addStats();
     viewer.initRaycaster();
-    viewer.initTween();
 
     modelLoader = new ModelLoader(viewer);
     const floors = new Floors(viewer);
@@ -43,17 +44,34 @@ const ThreeDemo: React.FC = () => {
       onMouseClick(list);
     });
   };
+
   const checkIsRack = (obj: THREE.Object3D): boolean => {
     return checkNameIncludes(obj, "rack");
   };
+
+  const checkIsChair = (obj: THREE.Object3D): boolean => {
+    return checkNameIncludes(obj, "chair");
+  };
+
   const onMouseClick = (intersects: THREE.Intersection[]) => {
     if (!intersects.length) return;
     const selectedObject = intersects?.[0].object || {};
-    selectedObject.visible = !selectedObject.visible;
+    const isChair = checkIsChair(selectedObject);
+    // const chair = findParent(selectedObject, checkIsChair);
+    if (isChair) {
+      viewer.initTween();
+      viewer?.addTween(new THREE.Vector3(0.05, 0.66, -2.54));
+    } else {
+      viewer.initTween();
+      viewer?.addTween(new THREE.Vector3(4, 2, -3));
+    }
+    // selectedObject.visible = !selectedObject.visible;
   };
+
   const onMouseMove = (intersects: THREE.Intersection[]) => {
     if (!intersects.length) {
       boxHelperWrap.setVisible(false);
+      chairList && changeOriginColor(chairList?.[0]);
       setShowPopover(false);
       return;
     }
@@ -70,10 +88,17 @@ const ThreeDemo: React.FC = () => {
     };
     findClickModel(selectedObject);
     const rack = findParent(selectedObject, checkIsRack);
+    const chair = findParent(selectedObject, checkIsChair);
+    // console.log("chair", chair);
+    // console.log("chairList", chairList);
+
     if (rack) {
-      // console.log(rack);
       boxHelperWrap.attach(rack);
       updateRackInfo(rack.name);
+    }
+
+    if (chair) {
+      changeWarningColor(chair);
     }
   };
   const updateRackInfo = (name: string) => {
@@ -102,9 +127,19 @@ const ThreeDemo: React.FC = () => {
       }
     });
   };
+  // 还原成原始颜色
+  const changeOriginColor = (model: THREE.Object3D) => {
+    if (!model) return;
+    model.traverse((item: any) => {
+      // 修改颜色
+      if (item.isMesh) {
+        item.material = item.oldMaterial;
+      }
+    });
+  };
+
   // 通过name修改成警告颜色
   const changeWarningColorByName = (name: string) => {
-    console.log(rackList);
     const model = rackList.find((item) => item.name === name);
     if (model) {
       changeWarningColor(model);
@@ -131,9 +166,13 @@ const ThreeDemo: React.FC = () => {
       // 启用基础模型的投射阴影功能
       baseModel.openCastShadow();
       let rackList: Object3DExtends[] = [];
+      // let chairList: Object3DExtends[] = [];
       model.traverse((item) => {
         if (checkIsRack(item)) {
           rackList.push(item);
+        }
+        if (checkIsChair(item)) {
+          chairList.push(item);
         }
         if (item instanceof THREE.Mesh) {
           // 保存原始颜色数据，以及警告颜色
@@ -150,9 +189,10 @@ const ThreeDemo: React.FC = () => {
         }
       });
       setRackList(rackList);
+      // setChairList(chairList);
       // console.log("rackList------", rackList);
       // 将 rackList 中的机架设置为 viewer 的射线检测对象
-      viewer.setRaycasterObjects(rackList);
+      viewer.setRaycasterObjects([...rackList, ...chairList]);
     });
   };
   useEffect(() => {
@@ -169,11 +209,7 @@ const ThreeDemo: React.FC = () => {
       console.log(viewer);
     }, 5000);
   }, [rackList]);
-  useEffect(() => {
-    setTimeout(() => {
-      viewer?.addTween(new THREE.Vector3(10, 10, 10));
-    }, 5000);
-  }, []);
+
   return (
     <div className={styles.wrapper}>
       <div
