@@ -160,7 +160,6 @@ export default class Viewer {
     this.initLight();
     this.initCamera();
     this.initControl();
-    // this.initTween();
     // this.initSkybox();
     // this.addAxis();
 
