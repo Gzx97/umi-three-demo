@@ -14,9 +14,10 @@ import mitt, { type Emitter } from "mitt";
 import Events from "./Events";
 import { throttle } from "lodash";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { Tween } from "three/examples/jsm/libs/tween.module.js";
+import TWEEN, { Tween } from "three/examples/jsm/libs/tween.module.js";
 import Stats from "three/examples/jsm/libs/stats.module.js";
 import SkyBoxs from "../SkyBoxs";
+import { CSS2DRenderer } from "three/examples/jsm/renderers/CSS2DRenderer.js";
 // import SkyBoxs from '../SkyBoxs'
 
 export type Animate = {
@@ -41,6 +42,7 @@ export default class Viewer {
   public raycasterObjects: THREE.Object3D[] = [];
   public isDestroy = false;
   public tween!: Tween<THREE.Vector3>;
+  public css2Renderer: CSS2DRenderer | undefined;
 
   constructor(id: string) {
     this.id = id;
@@ -69,7 +71,18 @@ export default class Viewer {
       content: this.statsControls,
     });
   }
-
+  /**
+   * 添加2D标签
+   */
+  public addCss2Renderer() {
+    if (!this.css2Renderer) return;
+    this.css2Renderer.render(this.scene, this.camera);
+    this.css2Renderer.setSize(1000, 1000);
+    this.css2Renderer.domElement.style.position = "absolute";
+    this.css2Renderer.domElement.style.top = "0px";
+    this.css2Renderer.domElement.style.pointerEvents = "none";
+    this.viewerDom.appendChild(this.css2Renderer?.domElement);
+  }
   /**
    * 初始化补间动画库tween
    */
@@ -160,6 +173,7 @@ export default class Viewer {
     this.initLight();
     this.initCamera();
     this.initControl();
+    this.initCss2Renderer();
     // this.initSkybox();
     // this.addAxis();
 
@@ -169,8 +183,10 @@ export default class Viewer {
     const animate = () => {
       if (this.isDestroy) return;
       requestAnimationFrame(animate);
+      TWEEN.update();
+      this.css2Renderer?.render(this.scene, this.camera);
       if (this.tween) {
-        this.tween.update();
+        // this.tween.update();
       }
       this.updateDom();
       this.renderDom();
@@ -185,7 +201,9 @@ export default class Viewer {
     };
     animate();
   }
-
+  private initCss2Renderer() {
+    this.css2Renderer = new CSS2DRenderer();
+  }
   private initScene() {
     this.scene = new Scene();
   }
@@ -236,7 +254,7 @@ export default class Viewer {
     this.controls.minDistance = 2;
     this.controls.maxDistance = 1000;
     this.controls.addEventListener("change", () => {
-      console.log(this.camera);
+      // console.log(this.camera);
       this.renderer.render(this.scene, this.camera);
     });
   }

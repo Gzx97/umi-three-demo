@@ -9,5 +9,6 @@ export interface Object3DExtends extends Object3D {
   isMesh?: boolean;
   material?: MaterialExtends;
   oldMaterial?: MaterialExtends;
-  name: string;
+  addData?: Record<string, any>;
+  dom?: HTMLElement;
 }
