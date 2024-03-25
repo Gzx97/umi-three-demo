@@ -1,6 +1,6 @@
-import React, { RefObject, useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import Viewer, { Animate } from "@/modules/Viewer";
+import Viewer from "@/modules/Viewer";
 import ModelLoader from "@/modules/ModelLoder";
 import BoxHelperWrap from "@/modules/BoxHelperWrap";
 import styles from "./index.less";
@@ -9,14 +9,10 @@ import { checkNameIncludes, findParent } from "@/utils";
 import Event from "@/modules/Viewer/Events";
 import { Object3DExtends } from "@/types";
 import Popover from "./components/Popover";
-import { Tween } from "three/examples/jsm/libs/tween.module.js";
 import { useRequest } from "ahooks";
 import axios from "axios";
 import { Button } from "antd";
-import {
-  CSS2DObject,
-  CSS2DRenderer,
-} from "three/examples/jsm/renderers/CSS2DRenderer.js";
+import { CSS2DObject } from "three/examples/jsm/renderers/CSS2DRenderer.js";
 const PAGE_ID = "FACTORY_CONTAINER";
 import _ from "lodash";
 const ThreeDemo: React.FC = () => {
@@ -176,6 +172,10 @@ const ThreeDemo: React.FC = () => {
         (item: Object3DExtends) => item.name === rack.name
       );
       if (found) {
+        if (found.warn) {
+          changeWarningColor(rack);
+        }
+
         return {
           ...rack,
           addData: {
