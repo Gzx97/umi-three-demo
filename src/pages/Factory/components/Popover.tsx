@@ -40,6 +40,7 @@ const Popover = React.forwardRef<any, PopoverProps>(
           <Descriptions.Item label="Live">Hangzhou, Zhejiang</Descriptions.Item>
           <Descriptions.Item label="Remark">empty</Descriptions.Item>
         </Descriptions>
+        <div className={styles.afterLine} />
       </div>
     );
   }
