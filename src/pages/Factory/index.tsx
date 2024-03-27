@@ -242,7 +242,7 @@ const ThreeDemo: React.FC = () => {
     if (!show) {
       let tag = undefined as CSS2DObject | undefined;
       viewer?.scene?.traverse((child) => {
-        if (child instanceof CSS2DObject && child.name === info.name) {
+        if (child instanceof CSS2DObject && child?.name === info?.name) {
           tag = child;
         }
       });
