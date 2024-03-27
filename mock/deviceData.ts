@@ -32,10 +32,20 @@ let deviceDatas: DeviceData[] = [
 ];
 
 export default defineMock({
-  "GET /api/getDeviceDatas": (_, res) => {
+  "GET /api/getDeviceDatas": (req, res) => {
     res.send({
       status: "ok",
       data: deviceDatas,
     });
+  },
+  "POST /api/getDeviceDatas/:id": (req, res) => {
+    let id = `${req.params.id}`;
+    const newDeviceDatas = deviceDatas?.map((item) => {
+      if (item?.id === id) {
+        return { ...item, warn: true };
+      }
+      return { ...item, warn: false };
+    });
+    res.send({ status: "ok", data: newDeviceDatas });
   },
 });

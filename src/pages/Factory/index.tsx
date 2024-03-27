@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useReducer, useRef, useState } from "react";
 import * as THREE from "three";
 import Viewer from "@/modules/Viewer";
 import ModelLoader from "@/modules/ModelLoder";
@@ -7,9 +7,9 @@ import styles from "./index.less";
 import Floors from "@/modules/Floors";
 import { checkNameIncludes, findParent } from "@/utils";
 import Event from "@/modules/Viewer/Events";
-import { Object3DExtends } from "@/types";
+import { ModelExtendsData, Object3DExtends } from "@/types";
 import Popover from "./components/Popover";
-import { useRequest } from "ahooks";
+import { useCounter, useRequest } from "ahooks";
 import axios from "axios";
 import { Button } from "antd";
 import { CSS2DObject } from "three/examples/jsm/renderers/CSS2DRenderer.js";
@@ -18,23 +18,123 @@ import _ from "lodash";
 const ThreeDemo: React.FC = () => {
   const [rackList, setRackList] = useState<Object3DExtends[]>([]); //架子
   const [chairList, setChairList] = useState<Object3DExtends[]>([]); //椅子
-  const [rackInfoList, setRackInfoList] = useState<Record<string, any>[]>([]); //报警设备
-  // let chairList = [] as THREE.Object3D[];
+  const [current, { inc }] = useCounter(1, { min: 1, max: 20 });
   const viewerRef = useRef<Viewer>();
   /** 标签ref */
   const tagRefs = useRef<Object3DExtends[]>([]);
   let modelLoader: ModelLoader;
   let boxHelperWrap: BoxHelperWrap;
+  // 修改颜色
+  const changeWarningColor = (model: Object3DExtends) => {
+    if (!model) return;
+    model.traverseVisible((item: Object3DExtends) => {
+      if (item.isMesh) {
+        item.material = new THREE.MeshStandardMaterial({
+          metalness: 1.0,
+          roughness: 0.5,
+        });
+        item.material.color = item?.oldMaterial?.warningColor;
+      }
+    });
+  };
+  // 还原成原始颜色
+  const changeOriginColor = (model: Object3DExtends) => {
+    if (!model) return;
+    model.traverse((item: any) => {
+      // 修改颜色
+      if (item.isMesh) {
+        item.material = item.oldMaterial;
+      }
+    });
+  };
 
+  // 通过name修改成警告颜色
+  const changeWarningColorByName = (name: string) => {
+    const model = rackList.find((item) => item.name === name);
+    if (model) {
+      changeWarningColor(model);
+    }
+  };
   /** 获取mock数据 */
   const { data: deviceDatas, run: queryDeviceDatas } = useRequest(
-    () => {
-      return axios.get("/api/getDeviceDatas").then((res) => res.data?.data);
+    (id) => {
+      return axios
+        .post(`/api/getDeviceDatas/${id}`)
+        .then((res) => res.data?.data);
     },
     {
       manual: true,
     }
   );
+
+  const [deviceListData, dispatchDeviceListData] = useReducer(
+    (
+      state: Object3DExtends[],
+      action: {
+        type: "OPERATE" | "INIT" | "ADD_DATA";
+        initData?: Object3DExtends[];
+        addData?: ModelExtendsData[];
+        operateData?: Object3DExtends;
+      }
+    ): Object3DExtends[] => {
+      const { type, initData, addData, operateData } = action;
+      switch (type) {
+        case "INIT":
+          if (initData) {
+            return initData;
+          }
+          break;
+        case "ADD_DATA":
+          return state?.map((rack) => {
+            const found = addData?.find((item) => item.name === rack.name);
+            if (found) {
+              const worldPosition = new THREE.Vector3(); // 获取模型在世界坐标系中的位置
+              Object.assign(rack, {
+                addData: {
+                  ...found,
+                  position: rack.getWorldPosition(worldPosition), //获取世界坐标
+                  visible: found?.visible ?? false,
+                },
+              });
+              return rack;
+            }
+            return rack;
+          }) as Object3DExtends[];
+        case "OPERATE":
+          console.log(operateData);
+          return state?.map((model) => {
+            if (model.name === operateData?.name) {
+              Object.assign(model, { addData: operateData?.addData });
+            }
+            return model;
+          }) as Object3DExtends[];
+        default:
+          return [...state];
+      }
+      return [...state];
+    },
+    []
+  );
+  /** 执行报警操作 */
+  useEffect(() => {
+    deviceListData?.forEach((item) => {
+      if (item?.addData?.warn) {
+        changeWarningColor(item);
+      } else {
+        changeOriginColor(item);
+      }
+    });
+  }, [deviceListData]);
+  /** 根据接口数据为模型添加信息 */
+  useEffect(() => {
+    const newData = deviceDatas?.map((data: ModelExtendsData) => {
+      if (data?.warn) {
+        return { ...data, visible: true };
+      }
+      return { ...data };
+    });
+    dispatchDeviceListData({ type: "ADD_DATA", addData: newData });
+  }, [deviceDatas]);
 
   // 加载
   const init = () => {
@@ -127,31 +227,28 @@ const ThreeDemo: React.FC = () => {
   };
 
   const updateRackInfo = (name: string) => {
-    const viewer = viewerRef.current;
     if (!name) {
       return;
     }
-    const event = viewer?.mouseEvent as MouseEvent;
-    console.log(name);
-    console.log(rackInfoList);
-    const newData = rackInfoList?.map((item) => {
-      if (item.name === name) {
-        console.log(item);
-        if (item.addData) {
-          item.addData.visible = !item.addData?.visible;
-        }
-      }
-      return { ...item };
-    });
-
-    setRackInfoList(newData);
+    const sourceData = _.find(deviceListData, { name: name });
+    _.set(sourceData!, "addData.visible", !sourceData?.addData?.visible);
+    dispatchDeviceListData({ type: "OPERATE", operateData: sourceData });
   };
 
   /** 创建CSS2DObject标签 */
   const createTags = (dom: HTMLElement, info: any) => {
     const viewer = viewerRef.current;
     const show = info?.visible;
-    if (!show) return;
+    if (!show) {
+      let tag = undefined as CSS2DObject | undefined;
+      viewer?.scene?.traverse((child) => {
+        if (child instanceof CSS2DObject && child.name === info.name) {
+          tag = child;
+        }
+      });
+      tag && viewer?.scene.remove(tag);
+      return;
+    }
     viewer?.addCss2Renderer();
     const TAG = new CSS2DObject(dom);
     const targetPosition = info?.position;
@@ -160,90 +257,43 @@ const ThreeDemo: React.FC = () => {
       targetPosition?.y + 0.5,
       targetPosition?.z
     );
-    viewer?.scene.add(TAG);
-  };
-
-  /** 整合接口和模型自带的对应的数据 */
-  useEffect(() => {
-    const myRackInfoList = rackList?.map((rack) => {
-      // 获取模型在世界坐标系中的位置
-      const worldPosition = new THREE.Vector3();
-      const found = deviceDatas?.find(
-        (item: Object3DExtends) => item.name === rack.name
-      );
-      if (found) {
-        if (found.warn) {
-          changeWarningColor(rack);
-        }
-
-        return {
-          ...rack,
-          addData: {
-            ...found,
-            position: rack.getWorldPosition(worldPosition), //获取世界坐标
-            visible: false,
-          },
-        };
+    TAG.name = info.name;
+    let hasTag = false;
+    viewer?.scene?.traverse((child) => {
+      if (child instanceof CSS2DObject && child.name === info.name) {
+        hasTag = true;
       }
-      return { ...rack };
-    }) as Object3DExtends[];
-    setRackInfoList(myRackInfoList);
-  }, [rackList, deviceDatas]);
+    });
+    !hasTag && viewer?.scene.add(TAG);
+    // console.log(viewer?.scene);
+  };
 
   /** 需要监听rackInfoList更新监听点击事件的函数 */
   useEffect(() => {
     if (!viewerRef.current) return;
     const viewer = viewerRef.current;
-    viewer.emitter.off(Event.click.raycaster);
-
+    viewer.emitter.off(Event.click.raycaster); //防止重复监听
     viewer?.emitter.on(Event.click.raycaster, (list: THREE.Intersection[]) => {
       onMouseClick(list);
     });
-  }, [rackInfoList, viewerRef, rackList]);
+  }, [deviceListData, viewerRef]);
   /** 监听rackInfoList更新标签 */
   useEffect(() => {
-    console.log("监听rackInfoList更新标签", rackInfoList);
+    console.log("监听rackInfoList更新标签", deviceListData);
+    const viewer = viewerRef.current;
+    let showNames = [] as string[];
+    let CSS2DObjectList = [] as CSS2DObject[];
     tagRefs?.current?.map((item, index) => {
       createTags(item?.dom as HTMLElement, item.addData);
-    });
-  }, [rackInfoList]);
-
-  // 修改颜色
-  const changeWarningColor = (model: Object3DExtends) => {
-    if (!model) return;
-    model.traverseVisible((item: Object3DExtends) => {
-      if (item.isMesh) {
-        item.material = new THREE.MeshStandardMaterial({
-          metalness: 1.0,
-          roughness: 0.5,
-        });
-        item.material.color = item?.oldMaterial?.warningColor;
+      if (item?.addData?.visible) {
+        showNames.push(item?.name);
       }
     });
-  };
-  // 还原成原始颜色
-  const changeOriginColor = (model: Object3DExtends) => {
-    if (!model) return;
-    model.traverse((item: any) => {
-      // 修改颜色
-      if (item.isMesh) {
-        item.material = item.oldMaterial;
-      }
-    });
-  };
+  }, [deviceListData]);
 
-  // 通过name修改成警告颜色
-  const changeWarningColorByName = (name: string) => {
-    const model = rackList.find((item) => item.name === name);
-    if (model) {
-      changeWarningColor(model);
-    }
-  };
   // 加载模型
   const initModel = () => {
     modelLoader.loadModelToScene("/models/datacenter.glb", (baseModel) => {
-      // /models/datacenter.glb
-      // /models/GuiGu-factory.glb
       console.log(baseModel);
       // 设置基础模型的缩放比例
       baseModel.setScalc(0.15);
@@ -256,7 +306,6 @@ const ThreeDemo: React.FC = () => {
       model.name = "机房1";
       model.uuid = "机房1";
       console.log(model);
-
       // 启用基础模型的投射阴影功能
       baseModel.openCastShadow();
       let rackList: Object3DExtends[] = [];
@@ -284,6 +333,7 @@ const ThreeDemo: React.FC = () => {
           }
         }
       });
+      dispatchDeviceListData({ type: "INIT", initData: rackList });
       setRackList(rackList);
       setChairList(chairList);
       const viewer = viewerRef.current;
@@ -308,7 +358,7 @@ const ThreeDemo: React.FC = () => {
         style={{ width: 1000, height: 1000, border: "1px solid red" }}
       ></div>
 
-      {rackInfoList?.map((item, index) => {
+      {deviceListData?.map((item, index) => {
         return (
           <Popover
             key={item?.name}
@@ -324,7 +374,8 @@ const ThreeDemo: React.FC = () => {
       {/* <Popover ref={tagRefs} viewer={viewerRef.current} show /> */}
       <Button
         onClick={() => {
-          queryDeviceDatas();
+          queryDeviceDatas(current);
+          inc();
         }}
       >
         获取mock数据
