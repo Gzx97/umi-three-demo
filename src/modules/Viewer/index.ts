@@ -86,7 +86,7 @@ export default class Viewer {
   /**
    * 初始化补间动画库tween
    */
-  public initTween() {
+  public initCameraTween() {
     if (!this.camera) return;
     this.tween = new Tween(this.camera.position);
   }
@@ -96,11 +96,11 @@ export default class Viewer {
    * @param targetPosition
    * @param duration
    */
-  public addTween(
+  public addCameraTween(
     targetPosition = new THREE.Vector3(1, 1, 1),
     duration = 1000
   ) {
-    this.tween.yoyo(true);
+    this.initCameraTween();
     this.tween.to(targetPosition, duration);
     this.tween.start();
   }

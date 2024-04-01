@@ -173,26 +173,10 @@ const ThreeDemo: React.FC = () => {
     if (rack) {
       updateRackInfo(rack.name);
     }
-
     if (isChair) {
-      console.log(selectedObject);
-      const worldPosition = new THREE.Vector3();
-      console.log(selectedObject.getWorldPosition(worldPosition));
-      return;
-      // new Tween(selectedObject.position)
-      //   .to(new THREE.Vector3(1, 1, 1), 1000)
-      //   .start()
-      //   .onUpdate(() => {
-      //     // console.log("999");
-      //     // selectedObject.position.set(1, 1, 1);
-      //   });
-      // selectedObject.position.set(1, 1, 1);
-      // return;
-      viewer?.initTween();
-      viewer?.addTween(new THREE.Vector3(0.05, 0.66, -2.54));
+      viewer?.addCameraTween(new THREE.Vector3(0.05, 0.66, -2.54));
     } else {
-      viewer?.initTween();
-      viewer?.addTween(new THREE.Vector3(4, 2, -3));
+      viewer?.addCameraTween(new THREE.Vector3(4, 2, -3));
     }
   };
 
