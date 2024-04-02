@@ -10,15 +10,13 @@ import { GLTF, GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
 const useThree = () => {
   const { loading, openLoading, closeLoading } = useLoading(true, 500);
-
-  const container = useRef<HTMLElement>();
-
+  const container = useRef<HTMLDivElement>(null);
   const scene = useRef<THREE.Scene | null>(null);
   const camera = useRef<THREE.Camera | null>(null);
   const renderer = useRef<THREE.WebGLRenderer | null>(null);
   const CSSRenderer = useRef<CSS2DRenderer | null>();
   const control = useRef<OrbitControls>();
-  const mixers: any = [];
+  const mixers: THREE.AnimationMixer[] = [];
   const clock = new THREE.Clock();
   const composers = new Map();
   const renderMixins = new Map();
@@ -39,7 +37,9 @@ const useThree = () => {
     const delta = new THREE.Clock().getDelta();
     renderer.current!.render(scene.current!, camera.current!);
     const mixerUpdateDelta = clock.getDelta();
-    mixers.forEach((mixer: any) => mixer.update(mixerUpdateDelta));
+    mixers.forEach((mixer: THREE.AnimationMixer) =>
+      mixer.update(mixerUpdateDelta)
+    );
     composers.forEach((composer) => composer.render(delta));
     renderMixins.forEach((mixin) => isFunction(mixin) && mixin());
     CSSRenderer.current!.render(scene.current!, camera.current!);
