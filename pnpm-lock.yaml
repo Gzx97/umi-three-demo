@@ -20,6 +20,9 @@ dependencies:
   axios:
     specifier: ^1.6.7
     version: 1.6.7
+  light-ruler:
+    specifier: ^1.0.3
+    version: 1.0.3
   lodash:
     specifier: ^4.17.21
     version: 4.17.21
@@ -6151,6 +6154,10 @@ packages:
     dependencies:
       prelude-ls: 1.2.1
       type-check: 0.4.0
+    dev: false
+
+  /light-ruler@1.0.3:
+    resolution: {integrity: sha512-lmWwxMZJCJkTFdr+1yKrM3VFgTj8PapIuSkKkY6rcTa41WESbR2uiwreL5/QpumsqauIbW/+6z1lp27i69Tnaw==}
     dev: false
 
   /lightningcss-darwin-arm64@1.22.1:

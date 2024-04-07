@@ -5,8 +5,11 @@ import { useMutation, useQuery, useQueryClient } from "umi";
 import styles from "./index.less";
 import ProductList from "@/pages/Products/components/ProductList";
 import Ruler from "@scena/ruler";
+// import LightRuler from "./components/light-ruler/dist";
+import LightRuler from "./components/light-ruler/dist";
 
 export default function Page() {
+  console.log(LightRuler);
   const rulerRef = useRef<any>(null);
   const queryClient = useQueryClient();
   const productsQuery = useQuery(["products"], {
