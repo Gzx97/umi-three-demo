@@ -30,7 +30,7 @@ class ThreeBase {
   static initRenderer(element: HTMLElement) {
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     // renderer.setClearColor('#000')
-    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.shadowMap.enabled = true;
     renderer.setSize(element.offsetWidth, element.offsetHeight);
     renderer.localClippingEnabled = true;

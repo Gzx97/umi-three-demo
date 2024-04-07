@@ -8,6 +8,9 @@ dependencies:
   '@ant-design/pro-layout':
     specifier: ^7.17.19
     version: 7.17.19(antd@5.15.0)(react-dom@18.2.0)(react@18.2.0)
+  '@scena/ruler':
+    specifier: ^0.20.0
+    version: 0.20.0
   ahooks:
     specifier: ^3.7.10
     version: 3.7.10(react@18.2.0)
@@ -949,6 +952,10 @@ packages:
     resolution: {integrity: sha512-SITSV6aIXsuVNV3f3O0f2n/cgyEDWoSqtZMYiAmcsYHydcKrOz3gUxB/iXd/Qf08+IZX4KpgNbvUdMBmWz+kcA==}
     engines: {node: '>=10'}
 
+  /@daybrush/utils@1.13.0:
+    resolution: {integrity: sha512-ALK12C6SQNNHw1enXK+UO8bdyQ+jaWNQ1Af7Z3FNxeAwjYhQT7do+TRE4RASAJ3ObaS2+TJ7TXR3oz2Gzbw0PQ==}
+    dev: false
+
   /@dnd-kit/accessibility@3.1.0(react@18.2.0):
     resolution: {integrity: sha512-ea7IkhKvlJUv9iSHJOnxinBcoOI3ppGnnL+VDJ75O45Nss6HtZd8IdN8touXPDtASfeI2T2LImb8VOZcL47wjQ==}
     peerDependencies:
@@ -1003,6 +1010,10 @@ packages:
       react: 18.2.0
       tslib: 2.6.2
     dev: true
+
+  /@egjs/list-differ@1.0.1:
+    resolution: {integrity: sha512-OTFTDQcWS+1ZREOdCWuk5hCBgYO4OsD30lXcOCyVOAjXMhgL5rBRDnt/otb6Nz8CzU0L/igdcaQBDLWc4t9gvg==}
+    dev: false
 
   /@emotion/hash@0.8.0:
     resolution: {integrity: sha512-kBJtf7PH6aWwZ6fka3zQ0p6SBYzx4fl1LoZXE2RrnYST9Xljm7WfKJrU4g/Xr3Beg72MLrp1AWNUmuYJTL7Cow==}
@@ -1811,6 +1822,20 @@ packages:
       rc-util: 5.38.2(react-dom@18.2.0)(react@18.2.0)
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
+
+  /@scena/react-ruler@0.19.0:
+    resolution: {integrity: sha512-2OEOjLMOptDxdSuEqID2JAljQuYoeoV09MnLjiBeyzJxoUcVjzyBCPwkMbHRKj2Z3WrwztJAFBF+y6yNNM5Lcw==}
+    dependencies:
+      '@daybrush/utils': 1.13.0
+      framework-utils: 1.1.0
+    dev: false
+
+  /@scena/ruler@0.20.0:
+    resolution: {integrity: sha512-KVrIwU0EvNJK1833yX7Qg8h/DvSZ04S6aR012UtuWqLaD/+T80HfN5b4IEs0rtoJ26FvvfMigVnOAmyHqc1S6g==}
+    dependencies:
+      croact: 1.0.4
+      croact-ruler: 0.18.0
+    dev: false
 
   /@sinclair/typebox@0.27.8:
     resolution: {integrity: sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==}
@@ -3904,6 +3929,19 @@ packages:
       sha.js: 2.4.11
     dev: false
 
+  /croact-ruler@0.18.0:
+    resolution: {integrity: sha512-FZtYH1n3Mpv7VX24y26lAMOVqem+/qRG4a7nBy9pwDeh9Q8UycOQqAdmWxNC1CNh1Pw1k4K28/gRQOyo4r1Zag==}
+    dependencies:
+      '@scena/react-ruler': 0.19.0
+    dev: false
+
+  /croact@1.0.4:
+    resolution: {integrity: sha512-9GhvyzTY/IVUrMQ2iz/mzgZ8+NcjczmIo/t4FkC1CU0CEcau6v6VsEih4jkTa4ZmRgYTF0qXEZLObCzdDFplpw==}
+    dependencies:
+      '@daybrush/utils': 1.13.0
+      '@egjs/list-differ': 1.0.1
+    dev: false
+
   /cross-spawn@7.0.3:
     resolution: {integrity: sha512-iRDPJKUPVEND7dHPO8rkbOnPpyDygcDFtWjpeWNCgy8WP2rXcxXL8TskReQl6OrB2G7+UJrags1q15Fudc7G6w==}
     engines: {node: '>= 8'}
@@ -5047,6 +5085,10 @@ packages:
 
   /fraction.js@4.3.7:
     resolution: {integrity: sha512-ZsDfxO51wGAXREY55a7la9LScWpwv9RxIrYABrlvOFBlH/ShPnrtsXeuUIfXKKOVicNxQ+o8JTbJvjS4M89yew==}
+    dev: false
+
+  /framework-utils@1.1.0:
+    resolution: {integrity: sha512-KAfqli5PwpFJ8o3psRNs8svpMGyCSAe8nmGcjQ0zZBWN2H6dZDnq+ABp3N3hdUmFeMrLtjOCTXD4yplUJIWceg==}
     dev: false
 
   /fs-extra@10.1.0:

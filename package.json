@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@ant-design/pro-layout": "^7.17.19",
+    "@scena/ruler": "^0.20.0",
     "ahooks": "^3.7.10",
     "antd": "^5.15.0",
     "axios": "^1.6.7",

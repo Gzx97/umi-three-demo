@@ -32,17 +32,55 @@ const ThreeUseHookDemo: React.FC = () => {
       [100, -100, 100],
       [100, 100, -100],
     ];
+    const ambient = new THREE.AmbientLight(0xffffff, 0.6);
     forEach(LIGHT_LIST, ([x, y, z]) => {
-      const directionalLight = new THREE.DirectionalLight(0xffffff, 3);
+      const directionalLight = new THREE.DirectionalLight(0xd90cef, 1);
+
       directionalLight.position.set(x, y, z);
       scene.current?.add(directionalLight);
     });
+    scene.current?.add(ambient);
   };
   const loadCarModel = async () => {
-    const { scene: object, animations } = await loadGLTF("/models/SU7.glb");
+    const textureLoader = new THREE.TextureLoader();
+    const modelPath = "/models/SU7.glb"; // 模型路径
+    const textureFolderPath = "/car-textures/"; // 贴图文件夹路径
+    const { scene: object, animations } = await loadGLTF(modelPath);
     object.scale.set(...MODEL_SCALES);
     object.position.set(0, 0, 0);
     object.name = "SU7";
+    object.traverse((node) => {
+      if (node instanceof THREE.Mesh) {
+        if (node.isMesh) {
+          // console.log(node.name);
+          const material = node.material;
+          // Mesh130 车标
+          // Mesh129 车架
+          // Mesh129_1 底架
+          if (node.name.includes("Mesh")) {
+            // node.visible = true;
+            // node.material.color = "#d90cef";
+          }
+          const baseColorMap = textureLoader.load(
+            `${textureFolderPath}CAR_WHEELA_1_BaseColor_5.png`
+          );
+          const metallicMap = textureLoader.load(
+            `${textureFolderPath}CAR_WHEELA_1_Metallic.png-CAR_WHEELA_1_Roughness.png_6@chann.png`
+          );
+          const roughnessMap = textureLoader.load(
+            `${textureFolderPath}CAR_WHEELA_1_Metallic.png-CAR_WHEELA_1_Roughness.png_6@chann.png`
+          );
+          const normalMap = textureLoader.load(
+            `${textureFolderPath}CAR_WHEELA_1_Normal_4.png`
+          );
+
+          // material.map = baseColorMap;
+          material.metalnessMap = metallicMap; //金属
+          material.roughnessMap = roughnessMap; //粗糙度
+          // material.normalMap = normalMap;
+        }
+      }
+    });
     modelGroup.add(object);
   };
   useEffect(() => {
