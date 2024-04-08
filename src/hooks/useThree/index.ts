@@ -4,7 +4,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { CSS2DRenderer } from "three/examples/jsm/renderers/CSS2DRenderer.js";
 import ThreeBase from "./core";
 import TWEEN, { Tween } from "three/examples/jsm/libs/tween.module.js";
-import { isFunction } from "lodash";
+import { isFunction, throttle } from "lodash";
 import useLoading from "../useLoading";
 import { GLTF, GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
@@ -17,10 +17,53 @@ const useThree = () => {
   const CSSRenderer = useRef<CSS2DRenderer | null>();
   const control = useRef<OrbitControls>();
   const mixers: THREE.AnimationMixer[] = [];
+  const mouse = useRef<THREE.Vector2 | null>(null);
   const clock = new THREE.Clock();
   const composers = new Map();
   const renderMixins = new Map();
-
+  const raycaster = new THREE.Raycaster();
+  // const mouse = new THREE.Vector2(
+  //   (event.clientX / el.offsetWidth) * 2 - 1,
+  //   -(event.clientY / el.offsetHeight) * 2 + 1
+  // );
+  const initRaycaster = () => {
+    const el = container.current as HTMLElement;
+    const initRaycasterEvent: Function = (
+      eventName: keyof HTMLElementEventMap
+    ) => {
+      //这里的container就是画布所在的div，也就是说，这个是要拿整个scene所在的容器来界定的
+      let getBoundingClientRect = el.getBoundingClientRect();
+      let offsetWidth = el.offsetWidth;
+      let offsetHeight = el.offsetHeight;
+      const funWrap = throttle((event: any) => {
+        const canvasX = event.clientX - getBoundingClientRect.left;
+        const canvasY = event.clientY - getBoundingClientRect.top;
+        const threeX = (canvasX / offsetWidth) * 2 - 1;
+        const threeY = -(canvasY / offsetHeight) * 2 + 1;
+        mouse.current = new THREE.Vector2(threeX, threeY);
+        raycaster.setFromCamera(mouse.current, camera.current!);
+      }, 50);
+      // funWrap()
+      el.addEventListener(eventName, funWrap);
+    };
+    initRaycasterEvent("click");
+    initRaycasterEvent("dblclick");
+    initRaycasterEvent("mousemove");
+  };
+  const destroy = () => {
+    scene?.current?.traverse((child: any) => {
+      if (child.material) {
+        child.material.dispose();
+      }
+      if (child.geometry) {
+        child.geometry.dispose();
+      }
+      child = null;
+    });
+    renderer?.current?.forceContextLoss();
+    renderer?.current?.dispose();
+    scene?.current?.clear();
+  };
   useEffect(() => {
     const el = container.current as HTMLElement;
     scene.current = ThreeBase.initScene();
@@ -31,6 +74,7 @@ const useThree = () => {
       camera.current,
       CSSRenderer.current.domElement
     );
+    initRaycaster();
   }, []);
 
   const render = () => {
@@ -84,10 +128,12 @@ const useThree = () => {
     clock,
     composers,
     renderMixins,
+    raycaster,
     render,
     loadGLTF,
     loadAnimate,
     loadModels,
+    destroy,
   };
 };
 

@@ -8,22 +8,18 @@ const PAGE_ID = "HOOKS_DEMO_CONTAINER";
 const MODEL_SCALES = [0.1 * 5, 0.1 * 5, 0.1 * 5] as const;
 
 const ThreeUseHookDemo: React.FC = () => {
-  const {
-    container,
-    scene,
-    camera,
-    control,
-    renderMixins,
-    loadGLTF,
-    loadModels,
-    render,
-  } = useThree();
+  const { container, scene, camera, control, raycaster, loadGLTF, render } =
+    useThree();
   const modelGroup = new THREE.Group();
   /**坐标轴辅助 */
   const addAxis = () => {
     const axis = new THREE.AxesHelper(1000);
     scene.current?.add(axis);
   };
+  useEffect(() => {
+    // const intersects = raycaster.intersectObject(modelEquipment.value!, true)
+    // console.log(raycaster)
+  }, [raycaster]);
   // 加载灯光
   const loadLights = () => {
     const LIGHT_LIST = [
@@ -32,6 +28,7 @@ const ThreeUseHookDemo: React.FC = () => {
       [100, -100, 100],
       [100, 100, -100],
     ];
+
     const ambient = new THREE.AmbientLight(0xffffff, 0.6);
     forEach(LIGHT_LIST, ([x, y, z]) => {
       const directionalLight = new THREE.DirectionalLight(0xd90cef, 1);
@@ -83,6 +80,7 @@ const ThreeUseHookDemo: React.FC = () => {
     });
     modelGroup.add(object);
   };
+
   useEffect(() => {
     addAxis();
     loadLights();
