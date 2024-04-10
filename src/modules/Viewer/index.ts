@@ -137,7 +137,7 @@ export default class Viewer {
           (Events as any)[eventName].raycaster,
           this.getRaycasterIntersectObjects()
         );
-      }, 50);
+      }, 100);
       this.viewerDom.addEventListener(eventName, funWrap, false);
     };
 

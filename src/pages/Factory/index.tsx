@@ -187,17 +187,13 @@ const ThreeDemo: React.FC = () => {
     updateRackInfo(rack.name);
   };
   const onMouseMove = (intersects: THREE.Intersection[]) => {
+    console.log(intersects);
     if (!intersects.length) {
       boxHelperWrap?.setVisible(false);
       return;
     }
     const selectedObject = intersects[0].object || {};
-    let selectedObjectName = "";
     const findHoverModel = (object: THREE.Object3D) => {
-      if (object.type === "Group") {
-        selectedObjectName = object.name;
-        return;
-      }
       if (object.parent && object.type !== "Scene") {
         findHoverModel(object.parent);
       }
@@ -341,8 +337,7 @@ const ThreeDemo: React.FC = () => {
         if (clippingPlane.constant <= -0.1) {
           viewer?.scene.remove(targetModel);
           viewer?.removeAnimate("clippingPlane");
-          viewer?.emitter.off(Event.click.raycaster); //防止重复监听
-
+          viewer?.setRaycasterObjects([]); //
           console.log(viewer?.scene);
         }
         clippingPlane.constant -= 0.001;
