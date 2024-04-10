@@ -59,10 +59,9 @@ const ThreeDemo: React.FC = () => {
   };
   /** 获取mock数据 */
   const { data: deviceDatas, run: queryDeviceDatas } = useRequest(
-    (id) => {
-      return axios
-        .post(`/api/getDeviceDatas/${id}`)
-        .then((res) => res.data?.data);
+    async (id) => {
+      const res = await axios.post(`/api/getDeviceDatas/${id}`);
+      return res.data?.data;
     },
     {
       manual: true,
@@ -338,6 +337,7 @@ const ThreeDemo: React.FC = () => {
           viewer?.scene.remove(targetModel);
           viewer?.removeAnimate("clippingPlane");
           viewer?.setRaycasterObjects([]); //
+
           console.log(viewer?.scene);
         }
         clippingPlane.constant -= 0.001;
