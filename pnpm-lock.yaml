@@ -29,6 +29,9 @@ dependencies:
   umi:
     specifier: ^4.1.2
     version: 4.1.2(@babel/core@7.24.0)(@types/node@18.19.21)(@types/react@18.2.62)(eslint@8.57.0)(prettier@3.2.5)(react-dom@18.2.0)(react@18.2.0)(stylelint@14.16.1)(typescript@5.3.3)(webpack@5.90.3)
+  uuid:
+    specifier: ^9.0.1
+    version: 9.0.1
 
 devDependencies:
   '@types/lodash':
@@ -46,6 +49,9 @@ devDependencies:
   '@types/three':
     specifier: ^0.152.1
     version: 0.152.1
+  '@types/uuid':
+    specifier: ^9.0.8
+    version: 9.0.8
   '@umijs/plugins':
     specifier: ^4.1.2
     version: 4.1.2(@babel/core@7.24.0)(@types/react-dom@18.2.19)(@types/react@18.2.62)(antd@5.15.0)(dva@2.5.0-beta.2)(rc-field-form@1.42.0)(react-dom@18.2.0)(react@18.2.0)
@@ -2215,6 +2221,10 @@ packages:
 
   /@types/use-sync-external-store@0.0.3:
     resolution: {integrity: sha512-EwmlvuaxPNej9+T4v5AuBPJa2x2UOJVdjCtDHgcDqitUeOtjnJKJ+apYjVcAoBEMjKW1VVFGZLUb5+qqa09XFA==}
+    dev: true
+
+  /@types/uuid@9.0.8:
+    resolution: {integrity: sha512-jg+97EGIcY9AGHJJRaaPVgetKDsrTgbRjQ5Msgjh/DQKEFl0DtyRr/VCOyD1T2R1MNeWPK/u7JoGhlDZnKBAfA==}
     dev: true
 
   /@types/webxr@0.5.14:
@@ -9499,6 +9509,11 @@ packages:
 
   /utila@0.4.0:
     resolution: {integrity: sha512-Z0DbgELS9/L/75wZbro8xAnT50pBVFQZ+hUEueGDU5FN51YSCYM+jdxsfCiHjwNP/4LCDD0i/graKpeBnOXKRA==}
+    dev: false
+
+  /uuid@9.0.1:
+    resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
+    hasBin: true
     dev: false
 
   /v8-compile-cache@2.4.0:

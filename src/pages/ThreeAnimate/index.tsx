@@ -44,7 +44,7 @@ const ThreeAnimate: React.FC = () => {
       const material = textureMesh.material as THREE.MeshStandardMaterial;
       const texture = material.map;
       const fnOnj = planeAnimate(texture!);
-      viewer.addAnimate(fnOnj);
+      viewer.addAnimate("plan", fnOnj);
     });
 
     // 工厂 garage_factory

@@ -1,6 +1,6 @@
 import React, { useEffect, useReducer, useRef, useState } from "react";
 import * as THREE from "three";
-import Viewer from "@/modules/Viewer";
+import Viewer, { Animate } from "@/modules/Viewer";
 import ModelLoader from "@/modules/ModelLoder";
 import BoxHelperWrap from "@/modules/BoxHelperWrap";
 import styles from "./index.less";
@@ -11,8 +11,10 @@ import { ModelExtendsData, Object3DExtends } from "@/types";
 import Popover from "./components/Popover";
 import { useCounter, useRequest } from "ahooks";
 import axios from "axios";
-import { Button } from "antd";
+import { Button, Space } from "antd";
 import { CSS2DObject } from "three/examples/jsm/renderers/CSS2DRenderer.js";
+import { v4 as uuid } from "uuid";
+
 const PAGE_ID = "FACTORY_CONTAINER";
 import _ from "lodash";
 const ThreeDemo: React.FC = () => {
@@ -165,21 +167,25 @@ const ThreeDemo: React.FC = () => {
   };
 
   const onMouseClick = (intersects: THREE.Intersection[]) => {
-    const viewer = viewerRef.current;
     if (!intersects.length) return;
     const selectedObject = intersects?.[0].object || {};
-    const isChair = checkIsChair(selectedObject);
-    const rack = findParent(selectedObject, checkIsRack);
-    if (rack) {
-      updateRackInfo(rack.name);
-    }
-    if (isChair) {
-      viewer?.addCameraTween(new THREE.Vector3(0.05, 0.66, -2.54));
-    } else {
-      viewer?.addCameraTween(new THREE.Vector3(4, 2, -3));
-    }
+    onClickRack(selectedObject);
+    onClickChair(selectedObject);
   };
-
+  const onClickChair = (selectedObject: THREE.Object3D) => {
+    if (!checkNameIncludes(selectedObject, "chair")) return;
+    const viewer = viewerRef.current;
+    viewer?.addCameraTween(new THREE.Vector3(0.05, 0.66, -2.54), 1000, () => {
+      console.log("动画完成");
+      console.log(viewer?.scene?.children);
+    });
+  };
+  const onClickRack = (selectedObject: THREE.Object3D) => {
+    if (!checkNameIncludes(selectedObject, "rack")) return;
+    const rack = findParent(selectedObject, checkIsRack);
+    if (!rack) return;
+    updateRackInfo(rack.name);
+  };
   const onMouseMove = (intersects: THREE.Intersection[]) => {
     if (!intersects.length) {
       boxHelperWrap?.setVisible(false);
@@ -187,33 +193,24 @@ const ThreeDemo: React.FC = () => {
     }
     const selectedObject = intersects[0].object || {};
     let selectedObjectName = "";
-    const findClickModel = (object: THREE.Object3D) => {
+    const findHoverModel = (object: THREE.Object3D) => {
       if (object.type === "Group") {
         selectedObjectName = object.name;
         return;
       }
       if (object.parent && object.type !== "Scene") {
-        findClickModel(object.parent);
+        findHoverModel(object.parent);
       }
     };
-    findClickModel(selectedObject);
-
+    findHoverModel(selectedObject);
     const rack = findParent(selectedObject, checkIsRack);
-    const chair = findParent(selectedObject, checkIsChair);
-
     if (rack) {
       boxHelperWrap.attach(rack);
-    }
-    if (chair) {
-      boxHelperWrap.attach(chair);
-      changeWarningColor(chair);
     }
   };
 
   const updateRackInfo = (name: string) => {
-    if (!name) {
-      return;
-    }
+    if (!name) return;
     const sourceData = _.find(deviceListData, { name: name });
     _.set(sourceData!, "addData.visible", !sourceData?.addData?.visible);
     dispatchDeviceListData({ type: "OPERATE", operateData: sourceData });
@@ -260,13 +257,11 @@ const ThreeDemo: React.FC = () => {
     viewer?.emitter.on(Event.click.raycaster, (list: THREE.Intersection[]) => {
       onMouseClick(list);
     });
-  }, [deviceListData, viewerRef]);
+  }, [deviceListData, viewerRef, viewerRef.current?.scene]);
   /** 监听rackInfoList更新标签 */
   useEffect(() => {
-    console.log("监听rackInfoList更新标签", deviceListData);
-    const viewer = viewerRef.current;
+    // console.log("监听rackInfoList更新标签", deviceListData);
     let showNames = [] as string[];
-    let CSS2DObjectList = [] as CSS2DObject[];
     tagRefs?.current?.map((item, index) => {
       createTags(item?.dom as HTMLElement, item.addData);
       if (item?.addData?.visible) {
@@ -287,8 +282,8 @@ const ThreeDemo: React.FC = () => {
       const model = baseModel.gltf.scene;
       model.position.set(0, 0, 0.3);
       // 为模型设置名称
-      model.name = "机房1";
-      model.uuid = "机房1";
+      model.name = "机房";
+      model.uuid = "机房";
       console.log(model);
       // 启用基础模型的投射阴影功能
       baseModel.openCastShadow();
@@ -323,8 +318,38 @@ const ThreeDemo: React.FC = () => {
       const viewer = viewerRef.current;
       // 将 rackList 中的机架设置为 viewer 的射线检测对象
       viewer?.setRaycasterObjects([...allList]);
-      // viewer.setRaycasterObjects([...rackList, ...chairList]);
     });
+  };
+  const onDismantle = () => {
+    const viewer = viewerRef.current;
+    const sceneModels = viewer?.scene?.children;
+    const targetModel = sceneModels?.find((model) => {
+      return model.name === "机房";
+    })!;
+    const clippingPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 0.3); //创建一个裁剪平面
+    // const helper = new THREE.PlaneHelper(clippingPlane, 300, 0xffff00);
+    // viewer?.scene.add(helper);
+    targetModel?.traverse((mesh) => {
+      if (!(mesh instanceof THREE.Mesh)) return undefined;
+      mesh.material.clipIntersection = true;
+      mesh.material.clipShadows = true;
+      mesh.material.clippingPlanes = [clippingPlane];
+      return undefined;
+    });
+    const fnOnj = {
+      fun: () => {
+        if (clippingPlane.constant <= -0.1) {
+          viewer?.scene.remove(targetModel);
+          viewer?.removeAnimate("clippingPlane");
+          viewer?.emitter.off(Event.click.raycaster); //防止重复监听
+
+          console.log(viewer?.scene);
+        }
+        clippingPlane.constant -= 0.001;
+      },
+      content: viewer,
+    };
+    viewer?.addAnimate("clippingPlane", fnOnj);
   };
   useEffect(() => {
     init();
@@ -356,14 +381,17 @@ const ThreeDemo: React.FC = () => {
         );
       })}
       {/* <Popover ref={tagRefs} viewer={viewerRef.current} show /> */}
-      <Button
-        onClick={() => {
-          queryDeviceDatas(current);
-          inc();
-        }}
-      >
-        获取mock数据
-      </Button>
+      <Space>
+        <Button
+          onClick={() => {
+            queryDeviceDatas(current);
+            inc();
+          }}
+        >
+          获取mock数据
+        </Button>
+        <Button onClick={onDismantle}>开始拆解</Button>
+      </Space>
     </div>
   );
 };

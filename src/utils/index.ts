@@ -30,7 +30,7 @@ export function recursionTree(
 import type { Object3D } from "three";
 
 /**
- * Finding object3D parent(include itself) circularly until callback return true.
+ * 循环查找 object3D 父对象（包括其自身），直到回调返回 true。
  * If don't find the parent match the callback,it will return null.
  * @param  {Object3D} object3d
  * @param  {(obj:Object3D)=>boolean} callback

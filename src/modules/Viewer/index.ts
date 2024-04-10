@@ -33,7 +33,7 @@ export default class Viewer {
   public renderer!: WebGLRenderer;
   public controls!: OrbitControls;
   public skyboxs!: SkyBoxs;
-  public animateEventList: any[] = [];
+  public animateEventList = new Map();
   public statsControls!: Stats;
   public raycaster!: Raycaster;
   public mouse!: Vector2;
@@ -54,8 +54,11 @@ export default class Viewer {
     this.scene?.add(axis);
   }
 
-  public addAnimate(animate: Animate) {
-    this.animateEventList.push(animate);
+  public addAnimate(id: string, animate: Animate) {
+    this.animateEventList.set(id, animate);
+  }
+  public removeAnimate(id: string) {
+    this.animateEventList?.delete(id);
   }
   /**
    * 添加性能状态监测
@@ -66,7 +69,7 @@ export default class Viewer {
     this.viewerDom.appendChild(this.statsControls.dom);
 
     // 添加到动画
-    this.addAnimate({
+    this.addAnimate("stats", {
       fun: this.statsUpdate,
       content: this.statsControls,
     });
@@ -98,11 +101,11 @@ export default class Viewer {
    */
   public addCameraTween(
     targetPosition = new THREE.Vector3(1, 1, 1),
-    duration = 1000
+    duration = 1000,
+    onComplete: () => void
   ) {
     this.initCameraTween();
-    this.tween.to(targetPosition, duration);
-    this.tween.start();
+    this.tween.to(targetPosition, duration).start().onComplete(onComplete);
   }
 
   /**注册鼠标事件监听 */
@@ -185,15 +188,12 @@ export default class Viewer {
       requestAnimationFrame(animate);
       TWEEN.update();
       this.css2Renderer?.render(this.scene, this.camera);
-      if (this.tween) {
-        // this.tween.update();
-      }
       this.updateDom();
       this.renderDom();
 
       // 全局的公共动画函数，添加函数可同步执行
       this.animateEventList.forEach((event) => {
-        // event.fun && event.content && event.fun(event.content);
+        // console.log("animateEventList");
         if (event.fun && event.content) {
           event.fun(event.content);
         }
@@ -238,6 +238,10 @@ export default class Viewer {
       // physicallyCorrectLights: true, // true/false 表示是否开启物理光照
     });
     this.renderer.clearDepth(); //清除深度缓冲区。在渲染之前，这通常用于重置深度缓冲区，以确保正确的深度测试
+
+    // 开启模型对象的局部剪裁平面功能
+    // 如果不设置为true，设置剪裁平面的模型不会被剪裁
+    this.renderer.localClippingEnabled = true;
 
     this.renderer.shadowMap.enabled = true;
     this.renderer.outputColorSpace = SRGBColorSpace; // 可以看到更亮的材质，同时这也影响到环境贴图。
