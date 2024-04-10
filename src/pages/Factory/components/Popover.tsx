@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useImperativeHandle, useRef } from "react";
 import styles from "./Popover.less";
 import { Descriptions, Typography } from "antd";
 export type PopoverProps = {
@@ -6,40 +6,44 @@ export type PopoverProps = {
   left?: number;
   show?: boolean;
   data?: Record<string, any>;
+  [key: string]: any;
 };
 
-const Popover: React.FC<PopoverProps> = ({
-  top = 0,
-  left = 0,
-  show = false,
-  data = { title: "" },
-}) => {
-  const position = {
-    top: `${top}px`,
-    left: `${left}px`,
-  };
-  return (
-    <div
-      style={{
-        ...position,
-        display: show ? "block" : "none",
-        color: "white",
-      }}
-      className={styles.wrapper}
-    >
-      <Descriptions
-        labelStyle={{ color: "white" }}
-        contentStyle={{ color: "white" }}
-        column={1}
-        title={<div style={{ color: "white" }}>{data?.title}</div>}
+const Popover = React.forwardRef<any, PopoverProps>(
+  ({ show = false, data = { title: "" }, viewer }, ref) => {
+    // const popoverRef = useRef(null);
+    // console.log(ref);
+    // useImperativeHandle(ref, () => ({
+    //   getDom: popoverRef.current,
+    // }));
+    return (
+      <div
+        // ref={popoverRef}
+        ref={ref}
+        style={{
+          // ...position,
+          opacity: show ? "1" : "0",
+          display: "none",
+          color: "white",
+          position: "absolute",
+        }}
+        className={styles.wrapper}
       >
-        <Descriptions.Item label="温度">{data?.title}℃</Descriptions.Item>
-        <Descriptions.Item label="湿度">{data?.title}</Descriptions.Item>
-        <Descriptions.Item label="Live">Hangzhou, Zhejiang</Descriptions.Item>
-        <Descriptions.Item label="Remark">empty</Descriptions.Item>
-      </Descriptions>
-    </div>
-  );
-};
+        <Descriptions
+          labelStyle={{ color: "white" }}
+          contentStyle={{ color: "white" }}
+          column={1}
+          title={<div style={{ color: "white" }}>{data?.title}</div>}
+        >
+          <Descriptions.Item label="温度">{data?.title}℃</Descriptions.Item>
+          <Descriptions.Item label="湿度">{data?.title}</Descriptions.Item>
+          <Descriptions.Item label="Live">Hangzhou, Zhejiang</Descriptions.Item>
+          <Descriptions.Item label="Remark">empty</Descriptions.Item>
+        </Descriptions>
+        <div className={styles.afterLine} />
+      </div>
+    );
+  }
+);
 
 export default Popover;

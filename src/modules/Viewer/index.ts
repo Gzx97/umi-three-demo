@@ -14,9 +14,10 @@ import mitt, { type Emitter } from "mitt";
 import Events from "./Events";
 import { throttle } from "lodash";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { Tween } from "three/examples/jsm/libs/tween.module.js";
+import TWEEN, { Tween } from "three/examples/jsm/libs/tween.module.js";
 import Stats from "three/examples/jsm/libs/stats.module.js";
 import SkyBoxs from "../SkyBoxs";
+import { CSS2DRenderer } from "three/examples/jsm/renderers/CSS2DRenderer.js";
 // import SkyBoxs from '../SkyBoxs'
 
 export type Animate = {
@@ -32,7 +33,7 @@ export default class Viewer {
   public renderer!: WebGLRenderer;
   public controls!: OrbitControls;
   public skyboxs!: SkyBoxs;
-  public animateEventList: any[] = [];
+  public animateEventList = new Map();
   public statsControls!: Stats;
   public raycaster!: Raycaster;
   public mouse!: Vector2;
@@ -41,6 +42,7 @@ export default class Viewer {
   public raycasterObjects: THREE.Object3D[] = [];
   public isDestroy = false;
   public tween!: Tween<THREE.Vector3>;
+  public css2Renderer: CSS2DRenderer | undefined;
 
   constructor(id: string) {
     this.id = id;
@@ -52,8 +54,11 @@ export default class Viewer {
     this.scene?.add(axis);
   }
 
-  public addAnimate(animate: Animate) {
-    this.animateEventList.push(animate);
+  public addAnimate(id: string, animate: Animate) {
+    this.animateEventList.set(id, animate);
+  }
+  public removeAnimate(id: string) {
+    this.animateEventList?.delete(id);
   }
   /**
    * 添加性能状态监测
@@ -64,16 +69,27 @@ export default class Viewer {
     this.viewerDom.appendChild(this.statsControls.dom);
 
     // 添加到动画
-    this.addAnimate({
+    this.addAnimate("stats", {
       fun: this.statsUpdate,
       content: this.statsControls,
     });
   }
-
+  /**
+   * 添加2D标签
+   */
+  public addCss2Renderer() {
+    if (!this.css2Renderer) return;
+    this.css2Renderer.render(this.scene, this.camera);
+    this.css2Renderer.setSize(1000, 1000);
+    this.css2Renderer.domElement.style.position = "absolute";
+    this.css2Renderer.domElement.style.top = "0px";
+    this.css2Renderer.domElement.style.pointerEvents = "none";
+    this.viewerDom.appendChild(this.css2Renderer?.domElement);
+  }
   /**
    * 初始化补间动画库tween
    */
-  public initTween() {
+  public initCameraTween() {
     if (!this.camera) return;
     this.tween = new Tween(this.camera.position);
   }
@@ -83,13 +99,13 @@ export default class Viewer {
    * @param targetPosition
    * @param duration
    */
-  public addTween(
+  public addCameraTween(
     targetPosition = new THREE.Vector3(1, 1, 1),
-    duration = 1000
+    duration = 1000,
+    onComplete: () => void
   ) {
-    this.tween.yoyo(true);
-    this.tween.to(targetPosition, duration);
-    this.tween.start();
+    this.initCameraTween();
+    this.tween.to(targetPosition, duration).start().onComplete(onComplete);
   }
 
   /**注册鼠标事件监听 */
@@ -121,7 +137,7 @@ export default class Viewer {
           (Events as any)[eventName].raycaster,
           this.getRaycasterIntersectObjects()
         );
-      }, 50);
+      }, 100);
       this.viewerDom.addEventListener(eventName, funWrap, false);
     };
 
@@ -160,6 +176,7 @@ export default class Viewer {
     this.initLight();
     this.initCamera();
     this.initControl();
+    this.initCss2Renderer();
     // this.initSkybox();
     // this.addAxis();
 
@@ -169,15 +186,14 @@ export default class Viewer {
     const animate = () => {
       if (this.isDestroy) return;
       requestAnimationFrame(animate);
-      if (this.tween) {
-        this.tween.update();
-      }
+      TWEEN.update();
+      this.css2Renderer?.render(this.scene, this.camera);
       this.updateDom();
       this.renderDom();
 
       // 全局的公共动画函数，添加函数可同步执行
       this.animateEventList.forEach((event) => {
-        // event.fun && event.content && event.fun(event.content);
+        // console.log("animateEventList");
         if (event.fun && event.content) {
           event.fun(event.content);
         }
@@ -185,7 +201,9 @@ export default class Viewer {
     };
     animate();
   }
-
+  private initCss2Renderer() {
+    this.css2Renderer = new CSS2DRenderer();
+  }
   private initScene() {
     this.scene = new Scene();
   }
@@ -221,6 +239,10 @@ export default class Viewer {
     });
     this.renderer.clearDepth(); //清除深度缓冲区。在渲染之前，这通常用于重置深度缓冲区，以确保正确的深度测试
 
+    // 开启模型对象的局部剪裁平面功能
+    // 如果不设置为true，设置剪裁平面的模型不会被剪裁
+    this.renderer.localClippingEnabled = true;
+
     this.renderer.shadowMap.enabled = true;
     this.renderer.outputColorSpace = SRGBColorSpace; // 可以看到更亮的材质，同时这也影响到环境贴图。
     this.viewerDom.appendChild(this.renderer.domElement);
@@ -236,7 +258,7 @@ export default class Viewer {
     this.controls.minDistance = 2;
     this.controls.maxDistance = 1000;
     this.controls.addEventListener("change", () => {
-      console.log(this.camera);
+      // console.log(this.camera);
       this.renderer.render(this.scene, this.camera);
     });
   }
