@@ -6,9 +6,9 @@ const PAGE_ID = "ROOM_CONTAINER";
 
 const Room: React.FC = () => {
   const viewerRef = useRef<Viewer>();
-  const textLoader = new THREE.TextureLoader();
 
   const createRoom = (name: string, position: THREE.Vector3) => {
+    const textLoader = new THREE.TextureLoader();
     const geometry = new THREE.SphereGeometry(16, 256, 256);
     geometry.scale(1, 1, -1);
     const material = new THREE.MeshBasicMaterial({

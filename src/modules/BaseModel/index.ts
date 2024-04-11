@@ -46,7 +46,7 @@ export default class BaseModel {
    * 设置模型动画
    * @param i 选择模型动画进行播放
    */
-  public startAnima(i = 0) {
+  public startAnima(i = 0, name: string = "0") {
     this.animaIndex = i;
     if (!this.mixer) this.mixer = new THREE.AnimationMixer(this.object);
     if (this.gltf.animations.length < 1) return;
@@ -56,7 +56,7 @@ export default class BaseModel {
       fun: this.updateAnima,
       content: this,
     };
-    this.viewer.addAnimate(this.animaObject);
+    this.viewer.addAnimate(name, this.animaObject);
   }
 
   private updateAnima(e: any) {

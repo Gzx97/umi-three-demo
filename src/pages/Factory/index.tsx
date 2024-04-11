@@ -5,7 +5,7 @@ import ModelLoader from "@/modules/ModelLoder";
 import BoxHelperWrap from "@/modules/BoxHelperWrap";
 import styles from "./index.less";
 import Floors from "@/modules/Floors";
-import { checkNameIncludes, findParent } from "@/utils";
+import { checkNameIncludes, findChildren, findParent } from "@/utils";
 import Event from "@/modules/Viewer/Events";
 import { ModelExtendsData, Object3DExtends } from "@/types";
 import Popover from "./components/Popover";
@@ -174,9 +174,23 @@ const ThreeDemo: React.FC = () => {
   const onClickChair = (selectedObject: THREE.Object3D) => {
     if (!checkNameIncludes(selectedObject, "chair")) return;
     const viewer = viewerRef.current;
+
     viewer?.addCameraTween(new THREE.Vector3(0.05, 0.66, -2.54), 1000, () => {
       console.log("动画完成");
       console.log(viewer?.scene?.children);
+      const sceneModels = viewer?.scene?.children;
+      // const model = sceneModels?.find((model) => {
+      //   return model.name === "机房";
+      // })!;
+      // const floorModel = sceneModels?.find((model) => {
+      //   return model.name === "机房";
+      // })
+      viewer?.setRaycasterObjects([]); //
+      sceneModels?.forEach((model) => {
+        viewer?.scene.remove(model);
+      });
+
+      createRoom("room", new THREE.Vector3(0, 0, 0));
     });
   };
   const onClickRack = (selectedObject: THREE.Object3D) => {
@@ -186,7 +200,6 @@ const ThreeDemo: React.FC = () => {
     updateRackInfo(rack.name);
   };
   const onMouseMove = (intersects: THREE.Intersection[]) => {
-    console.log(intersects);
     if (!intersects.length) {
       boxHelperWrap?.setVisible(false);
       return;
@@ -315,28 +328,52 @@ const ThreeDemo: React.FC = () => {
       viewer?.setRaycasterObjects([...allList]);
     });
   };
+  const createRoom = (name: string, position: THREE.Vector3) => {
+    const textLoader = new THREE.TextureLoader();
+    const geometry = new THREE.SphereGeometry(16, 256, 256); //创建一个球体贴全景图
+    geometry.scale(1, 1, -1); //它实际上是在将球体的内部翻转到外部，而外部翻转到内部。
+    const map = textLoader.load("/map/map_living_room.jpg", (a) => {
+      console.log(a);
+    });
+    // return;
+    const roomMaterial = new THREE.MeshBasicMaterial({
+      map: map,
+      side: THREE.DoubleSide,
+    });
+    const room = new THREE.Mesh(geometry, roomMaterial);
+    room.name = name;
+    room.position.set(position.x, position.y, position.z);
+    room.rotation.y = Math.PI / 2;
+    viewerRef.current?.scene.add(room);
+    return room;
+  };
   const onDismantle = () => {
     const viewer = viewerRef.current;
     const sceneModels = viewer?.scene?.children;
     const targetModel = sceneModels?.find((model) => {
       return model.name === "机房";
     })!;
+
     const clippingPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 0.3); //创建一个裁剪平面
-    // const helper = new THREE.PlaneHelper(clippingPlane, 300, 0xffff00);
-    // viewer?.scene.add(helper);
+    const helper = new THREE.PlaneHelper(clippingPlane, 300, 0xffff00);
+    viewer?.scene.add(helper);
     targetModel?.traverse((mesh) => {
-      if (!(mesh instanceof THREE.Mesh)) return undefined;
-      mesh.material.clipIntersection = true;
-      mesh.material.clipShadows = true;
-      mesh.material.clippingPlanes = [clippingPlane];
-      return undefined;
+      if (!(mesh instanceof THREE.Mesh)) return;
+      if (mesh.name === "chair") {
+        mesh.material = new THREE.MeshPhysicalMaterial({
+          ...mesh.material,
+          clipIntersection: true, //改变剪裁方式，剪裁所有平面要剪裁部分的交集
+          clipShadows: true,
+          clippingPlanes: [clippingPlane],
+        });
+      }
     });
     const fnOnj = {
       fun: () => {
         if (clippingPlane.constant <= -0.1) {
-          viewer?.scene.remove(targetModel);
+          // viewer?.scene.remove(targetModel);
           viewer?.removeAnimate("clippingPlane");
-          viewer?.setRaycasterObjects([]); //
+          // viewer?.setRaycasterObjects([]); //
 
           console.log(viewer?.scene);
         }
