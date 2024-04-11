@@ -62,7 +62,7 @@ const ThreeAnimate: React.FC = () => {
       // model.uuid = 'GuiGu-厂房1'
       // 启用基础模型的投射阴影功能
       baseModel.openCastShadow();
-      baseModel.startAnima(0);
+      baseModel.startAnima(0, "料");
     });
   };
 
