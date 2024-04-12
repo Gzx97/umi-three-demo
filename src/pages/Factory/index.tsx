@@ -194,14 +194,12 @@ const ThreeDemo: React.FC = () => {
     });
   };
   const onClickRack = (selectedObject: THREE.Object3D) => {
-    if (!checkNameIncludes(selectedObject, "rack")) return;
     const rack = findParent(selectedObject, checkIsRack);
     if (!rack) return;
     updateRackInfo(rack.name);
   };
   const onMouseMove = (intersects: THREE.Intersection[]) => {
     if (!intersects.length) {
-      boxHelperWrap?.setVisible(false);
       return;
     }
     const selectedObject = intersects[0].object || {};
@@ -211,9 +209,12 @@ const ThreeDemo: React.FC = () => {
       }
     };
     findHoverModel(selectedObject);
-    const rack = findParent(selectedObject, checkIsRack);
-    if (rack) {
-      boxHelperWrap.attach(rack);
+    const chair = findParent(selectedObject, checkIsChair);
+    boxHelperWrap.attach(selectedObject);
+    if (chair) {
+      boxHelperWrap.attach(chair);
+    } else {
+      boxHelperWrap.setVisible(false);
     }
   };
 

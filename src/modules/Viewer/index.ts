@@ -213,7 +213,6 @@ export default class Viewer {
     this.camera = new PerspectiveCamera(
       25,
       window.innerWidth / window.innerHeight,
-      // 1,
       1,
       2000
     );

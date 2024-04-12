@@ -1,3 +1,5 @@
+import TWEEN, { Tween } from "three/examples/jsm/libs/tween.module.js";
+
 /**
  * 递归树结构，修改树结构的属性的key
  * @param data 树结构数据
@@ -28,6 +30,7 @@ export function recursionTree(
 }
 
 import type { Object3D } from "three";
+import { isFunction } from "lodash";
 
 /**
  * 循环查找 object3D 父对象（包括其自身），直到回调返回 true。
@@ -71,3 +74,27 @@ export function checkNameIncludes(obj: Object3D, str: string): boolean {
     return false;
   }
 }
+
+export const animation = (props: {
+  from: Record<string, any>;
+  to: Record<string, any>;
+  duration: number;
+  easing?: any;
+  onUpdate: (params: Record<string, any>) => void;
+  onComplete?: (params: Record<string, any>) => void;
+}) => {
+  const {
+    from,
+    to,
+    duration,
+    easing = TWEEN.Easing.Quadratic.Out,
+    onUpdate,
+    onComplete,
+  } = props;
+  return new TWEEN.Tween(from)
+    .to(to, duration)
+    .easing(easing)
+    .onUpdate((object) => isFunction(onUpdate) && onUpdate(object))
+    .onComplete((object) => isFunction(onComplete) && onComplete(object))
+    .start();
+};
