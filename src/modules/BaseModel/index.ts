@@ -70,7 +70,7 @@ export default class BaseModel {
    * @param z
    * @returns {*}
    */
-  public cloneModel([x, y, z] = [0, 0, 0]) {
+  public cloneModel([x, y, z] = [0, 0, 0]): BaseModel {
     const newScene = { ...this.gltf };
     const newModel = clone(this.object);
     newModel.position.set(x, y, z);

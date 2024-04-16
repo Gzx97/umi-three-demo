@@ -1,4 +1,4 @@
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { GLTF, GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import BaseModel from "../BaseModel";
 import type Viewer from "../Viewer";
@@ -39,4 +39,11 @@ export default class ModelLoder {
       callback && callback(baseModel);
     });
   }
+  public loadGLTF = (url: string): Promise<GLTF> => {
+    const loader = new GLTFLoader();
+    const onCompleted = (object: GLTF, resolve: any) => resolve(object);
+    return new Promise<GLTF>((resolve) => {
+      loader.load(url, (object: GLTF) => onCompleted(object, resolve));
+    });
+  };
 }
