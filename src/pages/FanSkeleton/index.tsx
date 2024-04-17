@@ -6,6 +6,8 @@ import { GLTF, GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { Button, Spin } from "antd";
 import { forEach } from "lodash";
 import BaseModel from "@/modules/BaseModel";
+import { MODEL_SKELETON_ENUM } from "@/constants/ModelSkeleton";
+import { MODEL_EQUIPMENT_POSITION_PARAMS_ENUM } from "@/constants/constants";
 
 const PAGE_ID = "FAN_CONTAINER";
 const MODEL_SCALES = [0.0001 * 3, 0.0001 * 3, 0.0001 * 3] as const;
@@ -13,10 +15,7 @@ const MODEL_URL = {
   SKELETON: `/models/turbine.glb`,
   EQUIPMENT: `/models/equipment.glb`,
 } as const;
-const MODEL_SKELETON_ENUM = {
-  WireframeMaterial: "线框材质",
-  ColorMaterial: "颜色材质",
-} as const;
+
 const FanSkeleton: React.FC = () => {
   const [modelLoading, setModelLoading] = useState<boolean>(false);
   const viewerRef = useRef<Viewer>();
@@ -59,10 +58,11 @@ const FanSkeleton: React.FC = () => {
     viewer.addAxis();
     viewer.addStats();
     // 缩放限制
-    viewer.controls.maxDistance = 12;
+    // viewer.controls.maxDistance = 12;
     viewer.controls.target.set(0, 2, 0);
     viewer.camera.position.set(-5.42, 5, 9);
-    viewer.camera.lookAt(0, 2, 0);
+    // viewer.camera.position.set(2, 3.26, -0.24);
+    // viewer.camera.lookAt(0, 2, 0);
     loadLights();
     // 垂直旋转限制
     // viewer.controls.minPolarAngle = Math.PI / 2;
@@ -94,14 +94,14 @@ const FanSkeleton: React.FC = () => {
     baseModel.startAnima(0, "风机");
   };
   // 风机骨架消隐动画
-  const skeletonAnimation = () => {
+  const skeletonHideAnimation = () => {
     const viewer = viewerRef.current;
     if (!viewer) return;
     const shellModel = modelSkeleton.current?.getObjectByName(
       MODEL_SKELETON_ENUM.ColorMaterial
-    );
-    const clippingPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 3.5);
-    // const helper = new THREE.PlaneHelper(clippingPlane, 300, 0xffff00);
+    ); //筛选出需要裁剪的部分
+    const clippingPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 3.5); //裁剪平面
+    // const helper = new THREE.PlaneHelper(clippingPlane, 300, 0xffff00);//辅助查看裁剪平面
     // viewer.scene?.add(helper);
     shellModel?.traverse((mesh) => {
       if (!(mesh instanceof THREE.Mesh)) return undefined;
@@ -127,11 +127,25 @@ const FanSkeleton: React.FC = () => {
       content: viewer,
     };
     viewer?.addAnimate("clipping", fnOnj);
-    //   {
-    //     "x": -0.978355287796794,
-    //     "y": 3.1916429553746486,
-    //     "z": 1.5545883226580903
-    // }
+    // viewer.controls.target.set(0, 2.5, 0);
+    // viewer.camera.position.set(2, 3.26, -0.24);
+  };
+
+  // 设备分解动画
+  const equipmentDecomposeAnimation = async () => {
+    // await sleep(1 * 1000);
+    modelEquipment.current?.updateMatrixWorld();
+    modelEquipment.current?.children.forEach((child: THREE.Object3D) => {
+      const params = MODEL_EQUIPMENT_POSITION_PARAMS_ENUM[child.name];
+      viewerRef?.current?.animation({
+        from: child.position,
+        to: params.DECOMPOSE,
+        duration: 2 * 1000,
+        onUpdate: (position: any) => {
+          child.position.set(position.x, position.y, position.z);
+        },
+      });
+    });
   };
   useEffect(() => {
     init();
@@ -152,10 +166,17 @@ const FanSkeleton: React.FC = () => {
 
       <Button
         onClick={() => {
-          skeletonAnimation();
+          skeletonHideAnimation();
         }}
       >
-        开始分解
+        隐藏外壳
+      </Button>
+      <Button
+        onClick={() => {
+          equipmentDecomposeAnimation();
+        }}
+      >
+        分解设备
       </Button>
     </div>
   );
