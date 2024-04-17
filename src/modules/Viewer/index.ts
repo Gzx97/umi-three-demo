@@ -12,7 +12,7 @@ import {
 import * as THREE from "three";
 import mitt, { type Emitter } from "mitt";
 import Events from "./Events";
-import { throttle } from "lodash";
+import { isFunction, throttle } from "lodash";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import TWEEN, { Tween } from "three/examples/jsm/libs/tween.module.js";
 import Stats from "three/examples/jsm/libs/stats.module.js";
@@ -258,7 +258,8 @@ export default class Viewer {
     this.controls.minDistance = 2;
     this.controls.maxDistance = 1000;
     this.controls.addEventListener("change", () => {
-      console.log(this.camera);
+      // console.log(this.camera.position);
+      // console.log(this.controls.target);
       this.renderer.render(this.scene, this.camera);
     });
   }
@@ -319,4 +320,28 @@ export default class Viewer {
     // console.log(this.raycaster.intersectObjects(this.raycasterObjects, true));
     return this.raycaster.intersectObjects(this.raycasterObjects, true);
   }
+
+  public animation = (props: {
+    from: Record<string, any>;
+    to: Record<string, any>;
+    duration: number;
+    easing?: any;
+    onUpdate: (params: Record<string, any>) => void;
+    onComplete?: (params: Record<string, any>) => void;
+  }) => {
+    const {
+      from,
+      to,
+      duration,
+      easing = TWEEN.Easing.Quadratic.Out,
+      onUpdate,
+      onComplete,
+    } = props;
+    return new TWEEN.Tween(from)
+      .to(to, duration)
+      .easing(easing)
+      .onUpdate((object) => isFunction(onUpdate) && onUpdate(object))
+      .onComplete((object) => isFunction(onComplete) && onComplete(object))
+      .start();
+  };
 }
