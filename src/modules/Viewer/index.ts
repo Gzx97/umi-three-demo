@@ -212,8 +212,8 @@ export default class Viewer {
     // 渲染相机
     this.camera = new PerspectiveCamera(
       25,
-      window.innerWidth / window.innerHeight,
-      // 1,
+      // window.innerWidth / window.innerHeight,
+      1,
       1,
       2000
     );
@@ -258,7 +258,7 @@ export default class Viewer {
     this.controls.minDistance = 2;
     this.controls.maxDistance = 1000;
     this.controls.addEventListener("change", () => {
-      // console.log(this.camera);
+      console.log(this.camera);
       this.renderer.render(this.scene, this.camera);
     });
   }
@@ -285,6 +285,7 @@ export default class Viewer {
     light.shadow.camera.far = 400;
     // 设置mapSize属性可以使阴影更清晰，不那么模糊
     light.shadow.mapSize.set(1024, 1024);
+    light.name = "initLight";
 
     this.scene.add(light);
   }

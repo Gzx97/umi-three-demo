@@ -4,4 +4,5 @@ export const routes = [
   { path: "/three-animate", component: "ThreeAnimate", name: "皮带机动画模型" },
   { path: "/products", component: "Products", name: "产品demo页面" },
   { path: "/room", component: "Room", name: "全景展示" },
+  { path: "/fan-skeleton", component: "FanSkeleton", name: "风机" },
 ];
