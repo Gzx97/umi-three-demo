@@ -1,13 +1,13 @@
 name: Deploy static content to Pages
 on:
   push:
-    branches: ['dev']
+    branches: ["dev"]
 permissions:
   contents: read
   pages: write
   id-token: write
 concurrency:
-  group: 'pages'
+  group: "pages"
   cancel-in-progress: true
 jobs:
   deploy:
@@ -18,26 +18,34 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Set up Node
+      
+      # 新增 pnpm 安装步骤
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'  # 指定使用pnpm缓存
-          cache-dependency-path: pnpm-lock.yaml  # 指定pnpm锁文件
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2  # 添加pnpm安装步骤
-        with:
-          version: latest  # 使用最新版本的pnpm
+          cache: 'pnpm'  # 修改为 pnpm 缓存
+          
+      # 使用 pnpm 安装依赖
       - name: Install dependencies
-        run: pnpm install  # 使用pnpm安装依赖
+        run: pnpm install --frozen-lockfile
+        
+      # 使用 pnpm 执行构建
       - name: Build
-        run: pnpm build  # 使用pnpm执行构建命令
+        run: pnpm run build
+        
+      # 以下步骤保持不变
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './dist'
+          path: "./dist"
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
