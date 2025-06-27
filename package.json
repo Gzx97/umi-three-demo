@@ -3,7 +3,7 @@
   "author": "gzx_gds_dell <www.wanan499gzx@163.com>",
   "scripts": {
     "dev": "umi dev",
-    "build": "umi build",
+    "build": "umi build --publicPath /umi-three-demo/",
     "postinstall": "umi setup",
     "setup": "umi setup",
     "start": "npm run dev"
